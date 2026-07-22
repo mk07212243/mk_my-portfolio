@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOEIC単語ドリル</title>
+<style>
+  :root {
+    --bg: #EEF0E8;
+    --card: #FBFAF4;
+    --border: #d9dbcd;
+    --border-light: #e5e6dd;
+    --ink: #242920;
+    --muted: #6b7062;
+    --muted-2: #8b8f7d;
+    --accent: #B23B2E;
+    --correct: #3F7D5C;
+    --tab-inactive: #E1E3D6;
+    --tab-inactive-hover: #d9dbcd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  .wrap { width: 100%; max-width: 440px; }
+  header { text-align: center; margin-bottom: 28px; }
+  h1 {
+    font-family: Georgia, "Yu Mincho", serif;
+    font-size: 28px;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  header p { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+
+  .tabs { display: flex; gap: 4px; }
+  .tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 8px;
+    border-radius: 8px 8px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--tab-inactive);
+    color: var(--muted);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .tab:hover { background: var(--tab-inactive-hover); }
+  .tab.active {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  .card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0 8px 8px 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    padding: 32px;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .card-top-right {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+  .sub-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-2);
+    margin: 0;
+  }
+  .reset-link {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 11px;
+    color: var(--accent);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .reset-link:hover { opacity: 0.75; }
+  .progress-label {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--muted-2);
+    white-space: nowrap;
+  }
+  .word-display {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .word-display p {
+    font-family: Georgia, "Yu Mincho", serif;
+    font-size: 36px;
+    text-align: center;
+    margin: 0;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 18px;
+    text-align: center;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid #c7c9bb;
+    outline: none;
+    padding: 8px 0;
+    color: var(--ink);
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus { border-bottom-color: var(--ink); }
+  input[type="text"]:disabled { opacity: 0.7; }
+
+  button { font-family: inherit; }
+  .btn-primary {
+    width: 100%;
+    margin-top: 16px;
+    padding: 11px;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--card);
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #3a4032; }
+  .btn-primary:disabled { opacity: 0.3; cursor: default; }
+  .btn-secondary {
+    width: 100%;
+    padding: 11px;
+    border-radius: 6px;
+    background: #F1F2EA;
+    color: var(--ink);
+    border: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: #e6e8db; }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(36,41,32,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .modal-box {
+    width: 100%;
+    max-width: 300px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  }
+  .modal-msg { font-size: 26px; font-weight: 700; margin: 0 0 20px; color: var(--accent); line-height: 1.4; }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-actions button { margin-top: 0; }
+
+  .choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .choice-btn {
+    position: relative;
+    padding: 12px 12px 12px 34px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #F1F2EA;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--ink);
+    text-align: left;
+    transition: background 0.15s;
+  }
+  .choice-btn:hover:not(:disabled) { background: #e6e8db; }
+  .choice-btn:disabled { cursor: default; }
+  .choice-btn.correct { background: rgba(63,125,92,0.1); border-color: var(--correct); color: var(--correct); }
+  .choice-btn.wrong { background: rgba(178,59,46,0.1); border-color: var(--accent); color: var(--accent); }
+  .choice-btn.faded { opacity: 0.5; }
+  .key-hint {
+    position: absolute;
+    top: 50%;
+    left: 8px;
+    transform: translateY(-50%);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--muted-2);
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .feedback { margin-top: 12px; }
+  .feedback-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .feedback-line.correct { color: var(--correct); }
+  .feedback-line.wrong { color: var(--accent); }
+
+  .stamp {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, serif;
+    font-weight: bold;
+    font-size: 24px;
+    transform: rotate(-14deg);
+    opacity: 0.85;
+    pointer-events: none;
+    animation: stampIn 0.25s ease-out;
+  }
+  @keyframes stampIn {
+    from { opacity: 0; transform: scale(1.6) rotate(-14deg); }
+    to { opacity: 0.85; transform: scale(1) rotate(-14deg); }
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+  }
+  .empty-state p { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0; }
+
+  .mistakes-wrap { display: flex; flex-direction: column; gap: 24px; }
+  .mistake-block:not(:last-child) { border-bottom: 1px solid var(--border-light); padding-bottom: 20px; }
+  .mistake-title { font-size: 13px; font-weight: 600; margin: 0 0 10px; color: var(--ink); }
+  .table-scroll { overflow-x: auto; max-height: 260px; overflow-y: auto; }
+  .mistake-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .mistake-table th, .mistake-table td { padding: 7px 8px; border-bottom: 1px solid var(--border-light); text-align: left; white-space: nowrap; }
+  .mistake-table th { color: var(--muted-2); font-weight: 600; font-size: 11px; position: sticky; top: 0; background: var(--card); }
+  .mistake-table th:last-child, .mistake-table td:last-child { text-align: right; white-space: normal; width: 48px; }
+  .mistake-table td:nth-child(2) { white-space: normal; }
+  .mistake-empty { color: var(--muted); font-size: 13px; white-space: normal; }
+
+  footer {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted-2);
+    padding: 0 2px;
+  }
+
+  @media (max-width: 420px) {
+    .card { padding: 24px 20px; }
+    .word-display p { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const STORAGE_KEY = "toeicVocabStats";
+
+const WORDS = [
+  { id: 1, en: "invoice", ja: "請求書、送り状" },
+  { id: 2, en: "reimburse", ja: "払い戻す、弁償する" },
+  { id: 3, en: "itinerary", ja: "旅程表" },
+  { id: 4, en: "warranty", ja: "保証書" },
+  { id: 5, en: "inventory", ja: "在庫、棚卸し" },
+  { id: 6, en: "negotiate", ja: "交渉する" },
+  { id: 7, en: "candidate", ja: "候補者" },
+  { id: 8, en: "deadline", ja: "締め切り" },
+  { id: 9, en: "merger", ja: "合併" },
+  { id: 10, en: "subsidiary", ja: "子会社" },
+  { id: 11, en: "revenue", ja: "収益" },
+  { id: 12, en: "expenditure", ja: "支出" },
+  { id: 13, en: "shipment", ja: "出荷" },
+  { id: 14, en: "quotation", ja: "見積もり" },
+  { id: 15, en: "contract", ja: "契約、協定、契約書" },
+  { id: 16, en: "colleague", ja: "同僚" },
+  { id: 17, en: "supervisor", ja: "監督者" },
+  { id: 18, en: "vacancy", ja: "欠員" },
+  { id: 19, en: "applicant", ja: "応募者" },
+  { id: 20, en: "qualification", ja: "資格" },
+  { id: 21, en: "renovation", ja: "改装" },
+  { id: 22, en: "maintenance", ja: "保守" },
+  { id: 23, en: "procurement", ja: "調達" },
+  { id: 24, en: "logistics", ja: "物流" },
+  { id: 25, en: "compliance", ja: "法令順守" },
+  { id: 26, en: "discrepancy", ja: "食い違い" },
+  { id: 27, en: "feasibility", ja: "実現可能性" },
+  { id: 28, en: "endorsement", ja: "推薦" },
+  { id: 29, en: "amendment", ja: "改正" },
+  { id: 30, en: "terminate", ja: "解雇する" },
+  { id: 31, en: "allocate", ja: "割り当てる" },
+  { id: 32, en: "anticipate", ja: "予想する" },
+  { id: 33, en: "facilitate", ja: "促進する" },
+  { id: 34, en: "implement", ja: "実施する" },
+  { id: 35, en: "postpone", ja: "延期する" },
+  { id: 36, en: "estimate", ja: "見積もる" },
+  { id: 37, en: "voucher", ja: "商品券、クーポン" },
+  { id: 38, en: "premises", ja: "施設" },
+  { id: 39, en: "exemption", ja: "免除" },
+  { id: 40, en: "outsource", ja: "外部委託する" },
+  { id: 41, en: "company", ja: "会社" },
+  { id: 42, en: "department", ja: "部門、課" },
+  { id: 43, en: "several", ja: "いくつかの" },
+  { id: 44, en: "available", ja: "利用可能な" },
+  { id: 45, en: "quite", ja: "かなり" },
+  { id: 46, en: "board", ja: "会議体、取締役会" },
+  { id: 47, en: "likely", ja: "起こりそうな" },
+  { id: 48, en: "employee", ja: "従業員" },
+  { id: 49, en: "customer", ja: "顧客" },
+  { id: 50, en: "increase", ja: "増加させる" },
+  { id: 51, en: "president", ja: "社長、大統領" },
+  { id: 52, en: "same", ja: "同じ" },
+  { id: 53, en: "found", ja: "設立する" },
+  { id: 54, en: "advertisement", ja: "広告" },
+  { id: 55, en: "believe", ja: "信じる" },
+  { id: 56, en: "expensive", ja: "高価な" },
+  { id: 57, en: "due", ja: "納期、期限の" },
+  { id: 58, en: "possible", ja: "可能な" },
+  { id: 59, en: "secretary", ja: "秘書、(各省の)長官" },
+  { id: 60, en: "amount", ja: "量" },
+  { id: 61, en: "university", ja: "大学" },
+  { id: 62, en: "however", ja: "しかし、だけれども" },
+  { id: 63, en: "survey", ja: "調査" },
+  { id: 64, en: "own", ja: "自身の" },
+  { id: 65, en: "though", ja: "〜だけれども" },
+  { id: 66, en: "quality", ja: "品質" },
+  { id: 67, en: "purchase", ja: "購入する" },
+  { id: 68, en: "kind", ja: "親切な" },
+  { id: 69, en: "probably", ja: "おそらく" },
+  { id: 70, en: "purpose", ja: "目的" },
+  { id: 71, en: "although", ja: "〜だけれども" },
+  { id: 72, en: "mention", ja: "言う、言及する" },
+  { id: 73, en: "present", ja: "現在の" },
+  { id: 74, en: "important", ja: "重要な、大切な" },
+  { id: 75, en: "complete", ja: "完了する" },
+  { id: 76, en: "enough", ja: "十分な" },
+  { id: 77, en: "least", ja: "最も少ない" },
+  { id: 78, en: "passenger", ja: "乗客" },
+  { id: 79, en: "state", ja: "言う、述べる" },
+  { id: 80, en: "various", ja: "様々な" },
+  { id: 81, en: "allow", ja: "許可する" },
+  { id: 82, en: "appear", ja: "現れる" },
+  { id: 83, en: "furniture", ja: "家具" },
+  { id: 84, en: "almost", ja: "ほとんど" },
+  { id: 85, en: "government", ja: "政府" },
+  { id: 86, en: "throughout", ja: "至るところに" },
+  { id: 87, en: "budget", ja: "予算" },
+  { id: 88, en: "equipment", ja: "装置、設備" },
+  { id: 89, en: "consider", ja: "検討する、考える" },
+  { id: 90, en: "result", ja: "結果" },
+  { id: 91, en: "second", ja: "秒" },
+  { id: 92, en: "prior", ja: "前の、事前の" },
+  { id: 93, en: "entire", ja: "全体の" },
+  { id: 94, en: "vehicle", ja: "車両、車" },
+  { id: 95, en: "begin", ja: "開始する" },
+  { id: 96, en: "recent", ja: "最近の" },
+  { id: 97, en: "popular", ja: "人気の" },
+  { id: 98, en: "conversation", ja: "会話" },
+  { id: 99, en: "notice", ja: "知らせる、お知らせ" },
+  { id: 100, en: "community", ja: "共同体" },
+  { id: 101, en: "cause", ja: "引き起こす" },
+  { id: 102, en: "suggest", ja: "提案する" },
+  { id: 103, en: "modern", ja: "近代の" },
+  { id: 104, en: "union", ja: "組合" },
+  { id: 105, en: "fire", ja: "クビにする" },
+  { id: 106, en: "decide", ja: "決定する" },
+  { id: 107, en: "brochure", ja: "パンフレット、小冊子" },
+  { id: 108, en: "discuss", ja: "議論する" },
+  { id: 109, en: "deal", ja: "取引する" },
+  { id: 110, en: "avoid", ja: "避ける" },
+  { id: 111, en: "construction", ja: "建設" },
+  { id: 112, en: "director", ja: "取締役、重役" },
+  { id: 113, en: "public", ja: "公共の" },
+  { id: 114, en: "extremely", ja: "非常に" },
+  { id: 115, en: "editorial", ja: "社説の、編集の" },
+  { id: 116, en: "reservation", ja: "予約" },
+  { id: 117, en: "advantage", ja: "利点" },
+  { id: 118, en: "address", ja: "住所" },
+  { id: 119, en: "matter", ja: "事態" },
+  { id: 120, en: "immediately", ja: "すぐに" },
+  { id: 121, en: "ancient", ja: "古代の" },
+  { id: 122, en: "unless", ja: "〜でない限り" },
+  { id: 123, en: "attend", ja: "出席する" },
+  { id: 124, en: "hardly", ja: "ほとんど〜ない" },
+  { id: 125, en: "condition", ja: "条件" },
+  { id: 126, en: "insurance", ja: "保険" },
+  { id: 127, en: "perhaps", ja: "おそらく" },
+  { id: 128, en: "continue", ja: "継続する" },
+  { id: 129, en: "refund", ja: "払い戻し" },
+  { id: 130, en: "famous", ja: "有名な" },
+  { id: 131, en: "whether", ja: "〜かどうか" },
+  { id: 132, en: "particular", ja: "特定の" },
+  { id: 133, en: "recently", ja: "最近" },
+  { id: 134, en: "common", ja: "共通の" },
+  { id: 135, en: "exactly", ja: "正確に" },
+  { id: 136, en: "finally", ja: "ついに" },
+  { id: 137, en: "accounting", ja: "会計、経理、会計学" },
+  { id: 138, en: "period", ja: "期間" },
+  { id: 139, en: "fill", ja: "満たす" },
+  { id: 140, en: "include", ja: "含む" },
+  { id: 141, en: "foundation", ja: "基礎" },
+  { id: 142, en: "neither", ja: "いずれもない" },
+  { id: 143, en: "industrial", ja: "工業用の、産業の" },
+  { id: 144, en: "billboard", ja: "看板" },
+  { id: 145, en: "introduce", ja: "導入する、紹介する" },
+  { id: 146, en: "factor", ja: "因子" },
+  { id: 147, en: "roughly", ja: "約、およそ" },
+  { id: 148, en: "language", ja: "言語" },
+  { id: 149, en: "understand", ja: "理解する" },
+  { id: 150, en: "instead", ja: "代わりに" },
+  { id: 151, en: "approximately", ja: "約、おおよそ" },
+  { id: 152, en: "executive", ja: "幹部, 重役" },
+  { id: 153, en: "vice", ja: "副" },
+  { id: 154, en: "truly", ja: "真に" },
+  { id: 155, en: "precious", ja: "貴重な" },
+  { id: 156, en: "seldom", ja: "めったに〜ない" },
+  { id: 157, en: "submit", ja: "提出する" },
+  { id: 158, en: "happen", ja: "起こる" },
+  { id: 159, en: "district", ja: "地域" },
+  { id: 160, en: "overall", ja: "全体的な" },
+  { id: 161, en: "region", ja: "地域" },
+  { id: 162, en: "certain", ja: "特定の" },
+  { id: 163, en: "necessary", ja: "必要な" },
+  { id: 164, en: "unique", ja: "独特な" },
+  { id: 165, en: "typical", ja: "典型的な" },
+  { id: 166, en: "banknotes", ja: "紙幣" },
+  { id: 167, en: "accurate", ja: "正確な" },
+  { id: 168, en: "representative", ja: "代表者、代表的な" },
+  { id: 169, en: "certainly", ja: "確かに" },
+  { id: 170, en: "fairly", ja: "かなり" },
+  { id: 171, en: "application", ja: "応募(書類)" },
+  { id: 172, en: "further", ja: "それ以上の" },
+  { id: 173, en: "spread", ja: "広げる" },
+  { id: 174, en: "describe", ja: "説明する、描く" },
+  { id: 175, en: "grant", ja: "助成金、報償、与える" },
+  { id: 176, en: "despite", ja: "にもかかわらず" },
+  { id: 177, en: "worth", ja: "価値のある" },
+  { id: 178, en: "sort", ja: "種類" },
+  { id: 179, en: "spend", ja: "過ごす" },
+  { id: 180, en: "properly", ja: "適切に" },
+  { id: 181, en: "facility", ja: "施設" },
+  { id: 182, en: "expense", ja: "出費、費用" },
+  { id: 183, en: "remain", ja: "とどまる、残る" },
+  { id: 184, en: "profit", ja: "利益" },
+  { id: 185, en: "potential", ja: "潜在的な" },
+  { id: 186, en: "issue", ja: "問題" },
+  { id: 187, en: "million", ja: "百万" },
+  { id: 188, en: "nearly", ja: "近く、ほとんど" },
+  { id: 189, en: "typically", ja: "典型的に" },
+  { id: 190, en: "toward", ja: "の方へ" },
+  { id: 191, en: "responsibility", ja: "責任" },
+  { id: 192, en: "agree", ja: "同意する" },
+  { id: 193, en: "involve", ja: "関与する" },
+  { id: 194, en: "decrease", ja: "減少する" },
+  { id: 195, en: "improve", ja: "改善する" },
+  { id: 196, en: "award", ja: "賞" },
+  { id: 197, en: "upcoming", ja: "次期、次の" },
+  { id: 198, en: "guarantee", ja: "保証する" },
+  { id: 199, en: "destination", ja: "目的地" },
+  { id: 200, en: "along", ja: "に沿って" },
+  { id: 201, en: "waste", ja: "無駄に使う、ごみ" },
+  { id: 202, en: "moment", ja: "瞬間" },
+  { id: 203, en: "former", ja: "元の、前の" },
+  { id: 204, en: "feature", ja: "特徴、機能" },
+  { id: 205, en: "regarding", ja: "に関して" },
+  { id: 206, en: "correct", ja: "正しい、修正する" },
+  { id: 207, en: "remove", ja: "取り外す" },
+  { id: 208, en: "reduce", ja: "削減する" },
+  { id: 209, en: "develop", ja: "開発する、発達させる" },
+  { id: 210, en: "apply", ja: "適用する" },
+  { id: 211, en: "transportation", ja: "交通機関" },
+  { id: 212, en: "economy", ja: "経済" },
+  { id: 213, en: "sincerely", ja: "誠実に、敬具" },
+  { id: 214, en: "aspect", ja: "側面、外観" },
+  { id: 215, en: "unit", ja: "単位" },
+  { id: 216, en: "tax", ja: "税" },
+  { id: 217, en: "ensure", ja: "確かにする、確実にする" },
+  { id: 218, en: "complaint", ja: "苦情" },
+  { id: 219, en: "article", ja: "記事" },
+  { id: 220, en: "originally", ja: "もともと" },
+  { id: 221, en: "discovered", ja: "発見した" },
+  { id: 222, en: "sufficient", ja: "十分な" },
+  { id: 223, en: "nevertheless", ja: "にもかかわらず" },
+  { id: 224, en: "apologize", ja: "謝罪する" },
+  { id: 225, en: "laptop", ja: "ノートパソコン" },
+  { id: 226, en: "delay", ja: "遅延する、遅延" },
+  { id: 227, en: "express", ja: "表現する" },
+  { id: 228, en: "beyond", ja: "を超えて" },
+  { id: 229, en: "valuable", ja: "貴重な" },
+  { id: 230, en: "pier", ja: "桟橋" },
+  { id: 231, en: "difference", ja: "差、違い" },
+  { id: 232, en: "terrible", ja: "ひどい" },
+  { id: 233, en: "appropriate", ja: "適切な" },
+  { id: 234, en: "individual", ja: "個々の" },
+  { id: 235, en: "vote", ja: "投票、投票する" },
+  { id: 236, en: "law", ja: "法" },
+  { id: 237, en: "political", ja: "政治の" },
+  { id: 238, en: "prefer", ja: "好む" },
+  { id: 239, en: "firm", ja: "固い" },
+  { id: 240, en: "labor", ja: "労働" },
+  { id: 241, en: "method", ja: "方法" },
+  { id: 242, en: "cancer", ja: "癌" },
+  { id: 243, en: "unable", ja: "できない" },
+  { id: 244, en: "promote", ja: "推進する、昇進する" },
+  { id: 245, en: "statement", ja: "声明" },
+  { id: 246, en: "comfort", ja: "快適さ" },
+  { id: 247, en: "via", ja: "〜経由で" },
+  { id: 248, en: "remind", ja: "思い出させる" },
+  { id: 249, en: "institution", ja: "機関" },
+  { id: 250, en: "subject", ja: "主題" },
+  { id: 251, en: "temperature", ja: "温度" },
+  { id: 252, en: "microwave", ja: "電子レンジ" },
+  { id: 253, en: "odor", ja: "臭い" },
+  { id: 254, en: "climate", ja: "気候" },
+  { id: 255, en: "fail", ja: "失敗する" },
+  { id: 256, en: "resident", ja: "住民" },
+  { id: 257, en: "capable", ja: "能力がある" },
+  { id: 258, en: "gather", ja: "集まる" },
+  { id: 259, en: "growth", ja: "成長" },
+  { id: 260, en: "electronic", ja: "電子" },
+  { id: 261, en: "inform", ja: "知らせる" },
+  { id: 262, en: "demand", ja: "需要" },
+  { id: 263, en: "obtain", ja: "得る、獲得する" },
+  { id: 264, en: "unusual", ja: "珍しい" },
+  { id: 265, en: "opportunity", ja: "機会" },
+  { id: 266, en: "author", ja: "著者" },
+  { id: 267, en: "consequently", ja: "結果的に" },
+  { id: 268, en: "association", ja: "協会" },
+  { id: 269, en: "transfer", ja: "転送する、乗り換える" },
+  { id: 270, en: "committee", ja: "委員会" },
+  { id: 271, en: "eventually", ja: "最終的に" },
+  { id: 272, en: "responsible", ja: "責任のある" },
+  { id: 273, en: "recall", ja: "呼び戻す、思い出す" },
+  { id: 274, en: "approval", ja: "承認" },
+  { id: 275, en: "comfortable", ja: "快適な" },
+  { id: 276, en: "confident", ja: "自信のある" },
+  { id: 277, en: "administrative", ja: "行政の" },
+  { id: 278, en: "concern", ja: "関係する、心配させる" },
+  { id: 279, en: "apparently", ja: "一見すると" },
+  { id: 280, en: "registration", ja: "登録、登記" },
+  { id: 281, en: "electricity", ja: "電気" },
+  { id: 282, en: "enclosed", ja: "同封された" },
+  { id: 283, en: "crowded", ja: "混雑した" },
+  { id: 284, en: "eligible", ja: "資格のある" },
+  { id: 285, en: "attempt", ja: "試みる" },
+  { id: 286, en: "useful", ja: "役に立つ" },
+  { id: 287, en: "sight", ja: "景色" },
+  { id: 288, en: "soil", ja: "土壌" },
+  { id: 289, en: "participate", ja: "参加する" },
+  { id: 290, en: "confidential", ja: "機密の" },
+  { id: 291, en: "absolutely", ja: "確実に" },
+  { id: 292, en: "inexpensive", ja: "安価な" },
+  { id: 293, en: "otherwise", ja: "そうでなければ" },
+  { id: 294, en: "proper", ja: "適切な" },
+  { id: 295, en: "educational", ja: "教育の" },
+  { id: 296, en: "reliable", ja: "信頼できる" },
+  { id: 297, en: "quarterly", ja: "四半期、年4回の" },
+  { id: 298, en: "efficiently", ja: "効率的に" },
+  { id: 299, en: "encourage", ja: "奨励する" },
+  { id: 300, en: "exclusively", ja: "排他的な、もっぱら" },
+  { id: 301, en: "sentence", ja: "文" },
+  { id: 302, en: "disagree", ja: "反対する" },
+  { id: 303, en: "degree", ja: "角度，温度、学位" },
+  { id: 304, en: "lawyer", ja: "弁護士、法律家" },
+  { id: 305, en: "luggage", ja: "荷物" },
+  { id: 306, en: "object", ja: "目的、物、対象" },
+  { id: 307, en: "haven", ja: "避難所" },
+  { id: 308, en: "frank", ja: "率直な" },
+  { id: 309, en: "disaster", ja: "災害" },
+  { id: 310, en: "profitable", ja: "収益のある" },
+  { id: 311, en: "indicate", ja: "を示す" },
+  { id: 312, en: "respect", ja: "尊重する" },
+  { id: 313, en: "extension", ja: "拡張、(電話の)内線" },
+  { id: 314, en: "reasonable", ja: "合理的な" },
+  { id: 315, en: "roast", ja: "焙る" },
+  { id: 316, en: "contain", ja: "を含む" },
+  { id: 317, en: "operate", ja: "操作する" },
+  { id: 318, en: "depend", ja: "頼る" },
+  { id: 319, en: "bound", ja: "〜行きの" },
+  { id: 320, en: "classical", ja: "古典的な" },
+  { id: 321, en: "authority", ja: "権限" },
+  { id: 322, en: "chemical", ja: "化学の" },
+  { id: 323, en: "agenda", ja: "議題" },
+  { id: 324, en: "earthquake", ja: "地震" },
+  { id: 325, en: "vet", ja: "獣医" },
+  { id: 326, en: "approach", ja: "近づく" },
+  { id: 327, en: "technician", ja: "技術者" },
+  { id: 328, en: "attendant", ja: "係員、案内係" },
+  { id: 329, en: "subscription", ja: "定期購読" },
+  { id: 330, en: "accept", ja: "受け入れる" },
+  { id: 331, en: "attached", ja: "付属の" },
+  { id: 332, en: "complex", ja: "複雑な" },
+  { id: 333, en: "edge", ja: "端" },
+  { id: 334, en: "departure", ja: "出発" },
+  { id: 335, en: "duty", ja: "職務、義務" },
+  { id: 336, en: "attendance", ja: "出席" },
+  { id: 337, en: "attitude", ja: "態度" },
+  { id: 338, en: "distribute", ja: "配布する" },
+  { id: 339, en: "effort", ja: "努力" },
+  { id: 340, en: "brain", ja: "脳" },
+  { id: 341, en: "ban", ja: "禁止する、禁止" },
+  { id: 342, en: "confused", ja: "混乱した" },
+  { id: 343, en: "congress", ja: "会議、議会" },
+  { id: 344, en: "employment", ja: "雇用" },
+  { id: 345, en: "refer", ja: "参照する" },
+  { id: 346, en: "honor", ja: "名誉" },
+  { id: 347, en: "excuse", ja: "言い訳" },
+  { id: 348, en: "essentially", ja: "本質的に" },
+  { id: 349, en: "moreover", ja: "さらに" },
+  { id: 350, en: "obvious", ja: "明白な" },
+  { id: 351, en: "immediate", ja: "即時の" },
+  { id: 352, en: "permission", ja: "許可" },
+  { id: 353, en: "reputation", ja: "評判" },
+  { id: 354, en: "hygiene", ja: "衛生" },
+  { id: 355, en: "initially", ja: "最初に" },
+  { id: 356, en: "optimum", ja: "最適" },
+  { id: 357, en: "initial", ja: "初期の" },
+  { id: 358, en: "identify", ja: "識別する" },
+  { id: 359, en: "illegal", ja: "違法の" },
+  { id: 360, en: "replace", ja: "交換する" },
+  { id: 361, en: "receptionist", ja: "受付" },
+  { id: 362, en: "expire", ja: "期限が切れる" },
+  { id: 363, en: "manufacturer", ja: "製造者、メーカー" },
+  { id: 364, en: "evidence", ja: "証拠" },
+  { id: 365, en: "recommend", ja: "お勧めする" },
+  { id: 366, en: "replacement", ja: "交換" },
+  { id: 367, en: "satisfied", ja: "満足した" },
+  { id: 368, en: "content", ja: "内容" },
+  { id: 369, en: "disappointed", ja: "がっかりした" },
+  { id: 370, en: "worse", ja: "より悪い" },
+  { id: 371, en: "assess", ja: "評価する" },
+  { id: 372, en: "applause", ja: "拍手、賞賛" },
+  { id: 373, en: "surface", ja: "表面" },
+  { id: 374, en: "commercially", ja: "商業的に" },
+  { id: 375, en: "decline", ja: "減少する、傾く" },
+  { id: 376, en: "unlike", ja: "とは違って" },
+  { id: 377, en: "accountant", ja: "会計士" },
+  { id: 378, en: "supply", ja: "供給する" },
+  { id: 379, en: "species", ja: "種、種族" },
+  { id: 380, en: "compensation", ja: "補償" },
+  { id: 381, en: "sweep", ja: "掃除する、掃く" },
+  { id: 382, en: "sick", ja: "病気の" },
+  { id: 383, en: "comply", ja: "準拠する" },
+  { id: 384, en: "solve", ja: "解決する" },
+  { id: 385, en: "specification", ja: "仕様" },
+  { id: 386, en: "completion", ja: "完了" },
+  { id: 387, en: "vice president", ja: "副社長、副大統領" },
+  { id: 388, en: "closely", ja: "密接に" },
+  { id: 389, en: "determine", ja: "決心する、決定する" },
+  { id: 390, en: "status", ja: "地位、状態" },
+  { id: 391, en: "authorized", ja: "承認した" },
+  { id: 392, en: "exclusive", ja: "排他的な" },
+  { id: 393, en: "influence", ja: "影響" },
+  { id: 394, en: "impressive", ja: "印象的な" },
+  { id: 395, en: "popularity", ja: "人気" },
+  { id: 396, en: "fault", ja: "欠点、過失" },
+  { id: 397, en: "funding", ja: "資金調達" },
+  { id: 398, en: "incredible", ja: "信じられない" },
+  { id: 399, en: "installation", ja: "導入" },
+  { id: 400, en: "psychological", ja: "心理的な" },
+  { id: 401, en: "intent", ja: "意図、意向" },
+  { id: 402, en: "occur", ja: "発生する" },
+  { id: 403, en: "qualified", ja: "資格のある" },
+  { id: 404, en: "practice", ja: "練習する" },
+  { id: 405, en: "portion", ja: "部分" },
+  { id: 406, en: "frequent", ja: "頻繁に、頻繁な" },
+  { id: 407, en: "merely", ja: "単に" },
+  { id: 408, en: "latter", ja: "後者" },
+  { id: 409, en: "failure", ja: "故障、失敗" },
+  { id: 410, en: "prime", ja: "主な" },
+  { id: 411, en: "innovative", ja: "革新的な" },
+  { id: 412, en: "exist", ja: "存在する" },
+  { id: 413, en: "favorable", ja: "好ましい" },
+  { id: 414, en: "instance", ja: "例、実例" },
+  { id: 415, en: "archive", ja: "保管所" },
+  { id: 416, en: "aquarium", ja: "水族館" },
+  { id: 417, en: "rude", ja: "失礼な" },
+  { id: 418, en: "sadly", ja: "悲しそうに" },
+  { id: 419, en: "valid", ja: "有効な" },
+  { id: 420, en: "altogether", ja: "完全に" },
+  { id: 421, en: "rarely", ja: "めったに〜ない" },
+  { id: 422, en: "suppose", ja: "仮定する、思う" },
+  { id: 423, en: "science", ja: "科学" },
+  { id: 424, en: "adopt", ja: "採用する" },
+  { id: 425, en: "accurately", ja: "正確に" },
+  { id: 426, en: "traditional", ja: "伝統的な" },
+  { id: 427, en: "appreciate", ja: "感謝する" },
+  { id: 428, en: "aisle", ja: "通路" },
+  { id: 429, en: "atmosphere", ja: "雰囲気" },
+  { id: 430, en: "somewhat", ja: "やや，幾分か" },
+  { id: 431, en: "rid", ja: "取り除く" },
+  { id: 432, en: "whatever", ja: "何でも" },
+  { id: 433, en: "certificate", ja: "証明書" },
+  { id: 434, en: "fuel", ja: "燃料" },
+  { id: 435, en: "embarrassed", ja: "恥ずかしい" },
+  { id: 436, en: "enthusiasm", ja: "熱意" },
+  { id: 437, en: "competitive", ja: "競争力のある" },
+  { id: 438, en: "grand", ja: "大きな" },
+  { id: 439, en: "doubt", ja: "疑問を持つ" },
+  { id: 440, en: "formal", ja: "形式の、正式な" },
+  { id: 441, en: "empty", ja: "空の" },
+  { id: 442, en: "explanation", ja: "説明" },
+  { id: 443, en: "concerning", ja: "に関して" },
+  { id: 444, en: "habit", ja: "習慣" },
+  { id: 445, en: "considering", ja: "検討している" },
+  { id: 446, en: "detailed", ja: "詳細の、詳細な" },
+  { id: 447, en: "equipped", ja: "装備した" },
+  { id: 448, en: "estimated", ja: "見積もった" },
+  { id: 449, en: "guess", ja: "推測する、推測" },
+  { id: 450, en: "conscious", ja: "意識のある" },
+  { id: 451, en: "chairman", ja: "会長、議長" },
+  { id: 452, en: "defect", ja: "欠陥" },
+  { id: 453, en: "fiction", ja: "創作" },
+  { id: 454, en: "deliberately", ja: "故意に" },
+  { id: 455, en: "establishment", ja: "設立" },
+  { id: 456, en: "concession", ja: "譲歩" },
+  { id: 457, en: "division", ja: "部門" },
+  { id: 458, en: "demonstrate", ja: "実証する" },
+  { id: 459, en: "extreme", ja: "極端な" },
+  { id: 460, en: "everywhere", ja: "至る所に" },
+  { id: 461, en: "enterprise", ja: "企業" },
+  { id: 462, en: "chairperson", ja: "委員長、議長" },
+  { id: 463, en: "elderly", ja: "高齢の" },
+  { id: 464, en: "dedicated", ja: "捧げた" },
+  { id: 465, en: "discover", ja: "発見する" },
+  { id: 466, en: "imperial", ja: "帝国の" },
+  { id: 467, en: "productivity", ja: "生産性" },
+  { id: 468, en: "recommended", ja: "推奨した" },
+  { id: 469, en: "performed", ja: "実行した" },
+  { id: 470, en: "objective", ja: "目標、目的" },
+  { id: 471, en: "recommendation", ja: "推薦" },
+  { id: 472, en: "mathematics", ja: "数学" },
+  { id: 473, en: "procedure", ja: "手続き" },
+  { id: 474, en: "patient", ja: "患者" },
+  { id: 475, en: "layer", ja: "層" },
+  { id: 476, en: "investor", ja: "投資家" },
+  { id: 477, en: "improvement", ja: "改善" },
+  { id: 478, en: "instrument", ja: "楽器、機器" },
+  { id: 479, en: "recognition", ja: "認識" },
+  { id: 480, en: "investment", ja: "投資" },
+  { id: 481, en: "luxury", ja: "豪華な、贅沢" },
+  { id: 482, en: "personnel", ja: "人事、人事課" },
+  { id: 483, en: "overseas", ja: "海外の、海外へ" },
+  { id: 484, en: "rainforest", ja: "熱帯雨林" },
+  { id: 485, en: "sensitive", ja: "敏感な" },
+  { id: 486, en: "secure", ja: "安全な" },
+  { id: 487, en: "invest", ja: "投資する" },
+  { id: 488, en: "negotiation", ja: "交渉" },
+  { id: 489, en: "option", ja: "選択、選択権" },
+  { id: 490, en: "mayor", ja: "市長" },
+  { id: 491, en: "merchandise", ja: "商品" },
+  { id: 492, en: "retain", ja: "保持する" },
+  { id: 493, en: "afford", ja: "買う余裕のある" },
+  { id: 494, en: "admit", ja: "認める" },
+  { id: 495, en: "warehouse", ja: "倉庫、問屋" },
+  { id: 496, en: "barely", ja: "辛うじて" },
+  { id: 497, en: "surplus", ja: "余剰" },
+  { id: 498, en: "appliance", ja: "家電" },
+  { id: 499, en: "actual", ja: "実際の" },
+  { id: 500, en: "wage", ja: "賃金" },
+  { id: 501, en: "subway", ja: "地下鉄" },
+  { id: 502, en: "steel", ja: "鋼鉄" },
+  { id: 503, en: "apart", ja: "離れた" },
+  { id: 504, en: "vary", ja: "異なる、変わる" },
+  { id: 505, en: "thousands", ja: "何千もの" },
+  { id: 506, en: "structure", ja: "構造" },
+  { id: 507, en: "supervise", ja: "監督する" },
+  { id: 508, en: "agreement", ja: "合意" },
+  { id: 509, en: "significant", ja: "重要な" },
+  { id: 510, en: "unfortunately", ja: "不運にも、残念ながら" },
+  { id: 511, en: "accommodation", ja: "宿泊施設" },
+  { id: 512, en: "bend", ja: "曲げる" },
+  { id: 513, en: "toxic", ja: "有毒な" },
+  { id: 514, en: "assumption", ja: "仮定" },
+  { id: 515, en: "urgent", ja: "緊急の" },
+  { id: 516, en: "tremendous", ja: "驚異的な" },
+  { id: 517, en: "capstone", ja: "集大成、頂点" },
+  { id: 518, en: "conclusion", ja: "結論" },
+  { id: 519, en: "employ", ja: "採用する、雇う" },
+  { id: 520, en: "era", ja: "時代" },
+  { id: 521, en: "earn", ja: "お金を稼ぐ" },
+  { id: 522, en: "cooperation", ja: "協力" },
+  { id: 523, en: "extracted", ja: "抽出した" },
+  { id: 524, en: "firsthand", ja: "じかに" },
+  { id: 525, en: "exhibit", ja: "展示する" },
+  { id: 526, en: "donate", ja: "寄付する" },
+  { id: 527, en: "disease", ja: "病気" },
+  { id: 528, en: "frequently", ja: "頻繁に" },
+  { id: 529, en: "enormous", ja: "巨大な" },
+  { id: 530, en: "carbon", ja: "炭素" },
+  { id: 531, en: "gained", ja: "獲得した" },
+  { id: 532, en: "fascinating", ja: "魅惑的な" },
+  { id: 533, en: "encouraged", ja: "奨励した" },
+  { id: 534, en: "foster", ja: "養育する" },
+  { id: 535, en: "clientele", ja: "顧客、常連" },
+  { id: 536, en: "cargo", ja: "貨物" },
+  { id: 537, en: "CEO", ja: "代表取締役" },
+  { id: 538, en: "expand", ja: "拡大する" },
+  { id: 539, en: "evaluation", ja: "評価" },
+  { id: 540, en: "custom", ja: "風習" },
+  { id: 541, en: "evolution", ja: "進化" },
+  { id: 542, en: "directions", ja: "方向" },
+  { id: 543, en: "considerable", ja: "かなりの" },
+  { id: 544, en: "consult", ja: "相談する" },
+  { id: 545, en: "dynasty", ja: "王朝" },
+  { id: 546, en: "contribution", ja: "貢献" },
+  { id: 547, en: "employer", ja: "雇用者" },
+  { id: 548, en: "foam", ja: "泡" },
+  { id: 549, en: "flood", ja: "洪水" },
+  { id: 550, en: "odd", ja: "変わった、奇妙な" },
+  { id: 551, en: "obviously", ja: "明らかに" },
+  { id: 552, en: "patent", ja: "特許" },
+  { id: 553, en: "medieval", ja: "中世の" },
+  { id: 554, en: "inadvertently", ja: "うっかり" },
+  { id: 555, en: "persuade", ja: "説得する" },
+  { id: 556, en: "malfunctioning", ja: "誤動作、誤動作している" },
+  { id: 557, en: "illness", ja: "病気" },
+  { id: 558, en: "gladiator", ja: "闘技者" },
+  { id: 559, en: "infect", ja: "感染する" },
+  { id: 560, en: "logical", ja: "論理的な" },
+  { id: 561, en: "medicine", ja: "薬" },
+  { id: 562, en: "physical", ja: "物理的な、身体的な" },
+  { id: 563, en: "landfill", ja: "埋め立て" },
+  { id: 564, en: "ideal", ja: "理想的な" },
+  { id: 565, en: "necessarily", ja: "必ずしも" },
+  { id: 566, en: "inconvenience", ja: "不便さ" },
+  { id: 567, en: "obsession", ja: "強迫観念" },
+  { id: 568, en: "patron", ja: "常連客、顧客" },
+  { id: 569, en: "opposite", ja: "反対の" },
+  { id: 570, en: "maintain", ja: "維持する" },
+  { id: 571, en: "party", ja: "政党" },
+  { id: 572, en: "innocent", ja: "罪のない" },
+  { id: 573, en: "grateful", ja: "感謝して" },
+  { id: 574, en: "incorrect", ja: "不正解、誤った" },
+  { id: 575, en: "granger", ja: "農業労働者、農場主" },
+  { id: 576, en: "outcome", ja: "結果" },
+  { id: 577, en: "plaque", ja: "銘板" },
+  { id: 578, en: "namely", ja: "すなわち" },
+  { id: 579, en: "observe", ja: "観察する" },
+  { id: 580, en: "reject", ja: "拒否する" },
+  { id: 581, en: "subscribe", ja: "購読する" },
+  { id: 582, en: "settlement", ja: "解決、和解" },
+  { id: 583, en: "thorough", ja: "徹底した" },
+  { id: 584, en: "property", ja: "財産" },
+  { id: 585, en: "slight", ja: "わずかな" },
+  { id: 586, en: "till", ja: "まで" },
+  { id: 587, en: "proof", ja: "証拠" },
+  { id: 588, en: "solid", ja: "固い" },
+  { id: 589, en: "replicate", ja: "複製する" },
+  { id: 590, en: "reference", ja: "参照" },
+  { id: 591, en: "strictly", ja: "厳密に" },
+  { id: 592, en: "square", ja: "四角形" },
+  { id: 593, en: "scheme", ja: "計画" },
+  { id: 594, en: "relative", ja: "親類の、親戚" },
+  { id: 595, en: "temporary", ja: "一時的な" },
+  { id: 596, en: "thereby", ja: "それによって" },
+  { id: 597, en: "regret", ja: "後悔する" },
+  { id: 598, en: "sightseeing", ja: "観光" },
+  { id: 599, en: "slightly", ja: "わずかに" },
+  { id: 600, en: "principal", ja: "主要な、主な" },
+  { id: 601, en: "prompt", ja: "即座の、素早い" },
+  { id: 602, en: "reimbursement", ja: "償還" },
+  { id: 603, en: "restriction", ja: "制限" },
+  { id: 604, en: "substitute", ja: "代替する" },
+  { id: 605, en: "raw", ja: "生の" },
+  { id: 606, en: "strategy", ja: "戦略" },
+  { id: 607, en: "ridiculous", ja: "ばかげた" },
+  { id: 608, en: "remaining", ja: "残り" },
+  { id: 609, en: "accomplish", ja: "達成する" },
+  { id: 610, en: "calculate", ja: "計算する" },
+  { id: 611, en: "architectural", ja: "建築の" },
+  { id: 612, en: "assignment", ja: "宿題、割り当て" },
+  { id: 613, en: "belief", ja: "信念" },
+  { id: 614, en: "underlying", ja: "根底にある" },
+  { id: 615, en: "valley", ja: "谷" },
+  { id: 616, en: "trustee", ja: "管財人" },
+  { id: 617, en: "aside", ja: "脇、横" },
+  { id: 618, en: "arid", ja: "乾燥した" },
+  { id: 619, en: "ambulance", ja: "救急車" },
+  { id: 620, en: "upset", ja: "動揺させる、ひっくり返す" },
+  { id: 621, en: "visible", ja: "目に見える" },
+  { id: 622, en: "capability", ja: "能力" },
+  { id: 623, en: "utilize", ja: "活用する" },
+  { id: 624, en: "adversely", ja: "悪影響を及ぼすように" },
+  { id: 625, en: "agriculture", ja: "農業" },
+  { id: 626, en: "accidentally", ja: "誤って" },
+  { id: 627, en: "bankrupt", ja: "破産した、破産" },
+  { id: 628, en: "achieve", ja: "達成する" },
+  { id: 629, en: "adequate", ja: "十分な" },
+  { id: 630, en: "arrangement", ja: "手配" },
+  { id: 631, en: "billion", ja: "十億" },
+  { id: 632, en: "aware", ja: "気付いている" },
+  { id: 633, en: "authorization", ja: "承認" },
+  { id: 634, en: "broadcast", ja: "放送" },
+  { id: 635, en: "aptitude", ja: "適性" },
+  { id: 636, en: "interview", ja: "面接" },
+  { id: 637, en: "annual", ja: "年間の" },
+  { id: 638, en: "participant", ja: "参加者" },
+  { id: 639, en: "council", ja: "議会" },
+  { id: 640, en: "per", ja: "〜につき" },
+  { id: 641, en: "intend", ja: "〜するつもりである" },
+  { id: 642, en: "complimentary", ja: "無料の，賞賛の，敬意を表する" },
+  { id: 643, en: "contemporary", ja: "現代の、近代の" },
+  { id: 644, en: "inspection", ja: "検査、視察" },
+  { id: 645, en: "grocery", ja: "食料品" },
+  { id: 646, en: "invitation", ja: "招待" },
+  { id: 647, en: "realize", ja: "わかる、実現する" },
+  { id: 648, en: "quantity", ja: "数、数量" },
+  { id: 649, en: "branch", ja: "支店" },
+  { id: 650, en: "multiple", ja: "複数の" },
+  { id: 651, en: "inquire", ja: "尋ねる、問い合わせる" },
+  { id: 652, en: "ingredient", ja: "材料" },
+  { id: 653, en: "term", ja: "期間、専門用語" },
+  { id: 654, en: "impress", ja: "印象を与える" },
+  { id: 655, en: "acknowledge", ja: "認める" },
+  { id: 656, en: "landscape", ja: "景色" },
+  { id: 657, en: "initiative", ja: "主導権、進取の精神" },
+  { id: 658, en: "accommodate", ja: "収容する、宿泊させる" },
+  { id: 659, en: "vendor", ja: "供給者" },
+  { id: 660, en: "consumer", ja: "消費者" },
+  { id: 661, en: "convenient", ja: "便利な" },
+  { id: 662, en: "previous", ja: "以前の" },
+  { id: 663, en: "extend", ja: "延長する" },
+  { id: 664, en: "therefore", ja: "したがって、だから" },
+  { id: 665, en: "either", ja: "いずれか、どちらか" },
+  { id: 666, en: "permit", ja: "許可証/許可する" },
+  { id: 667, en: "verify", ja: "確認する" },
+  { id: 668, en: "enclose", ja: "同封する" },
+  { id: 669, en: "neighborhood", ja: "近所" },
+  { id: 670, en: "prescription", ja: "処方箋" },
+  { id: 671, en: "eatery", ja: "食事場所" },
+  { id: 672, en: "definitely", ja: "間違いなく" },
+  { id: 673, en: "affordable", ja: "値段が手頃な" },
+  { id: 674, en: "directory", ja: "名簿" },
+  { id: 675, en: "impact", ja: "影響、影響する" },
+  { id: 676, en: "whenever", ja: "する時はいつでも" },
+  { id: 677, en: "adjust", ja: "調整する、合わせる" },
+  { id: 678, en: "relevant", ja: "関連のある" },
+  { id: 679, en: "cuisine", ja: "料理" },
+  { id: 680, en: "yield", ja: "産出する" },
+  { id: 681, en: "autograph", ja: "著名人のサイン" },
+  { id: 682, en: "enroll", ja: "入学する" },
+  { id: 683, en: "achievement", ja: "達成" },
+  { id: 684, en: "decade", ja: "10年間" },
+  { id: 685, en: "owe", ja: "借りている" },
+  { id: 686, en: "practical", ja: "実践的な" },
+  { id: 687, en: "undergo", ja: "経験する" },
+  { id: 688, en: "outstanding", ja: "傑出した/未払いの" },
+  { id: 689, en: "satisfaction", ja: "満足" },
+  { id: 690, en: "auditorium", ja: "講堂" },
+  { id: 691, en: "recipient", ja: "受取人" },
+  { id: 692, en: "efficiency", ja: "効率" },
+  { id: 693, en: "ladder", ja: "はしご" },
+  { id: 694, en: "durable", ja: "耐久性のある" },
+  { id: 695, en: "stack", ja: "積み重ねる" },
+  { id: 696, en: "qualify", ja: "資格を与える" },
+  { id: 697, en: "constant", ja: "絶え間なく続く" },
+  { id: 698, en: "shortly", ja: "まもなく" },
+  { id: 699, en: "municipal", ja: "市政の" },
+  { id: 700, en: "comprehensive", ja: "包括的な" },
+  { id: 701, en: "enhance", ja: "強化する、高める" },
+  { id: 702, en: "premise", ja: "前提、根拠" },
+  { id: 703, en: "conclude", ja: "結論付ける" },
+  { id: 704, en: "likewise", ja: "同様に" },
+  { id: 705, en: "enlarge", ja: "拡大する" },
+  { id: 706, en: "fluctuate", ja: "変動する" },
+  { id: 707, en: "consecutive", ja: "連続した" },
+  { id: 708, en: "meanwhile", ja: "一方で" },
+  { id: 709, en: "prevent", ja: "事前に防ぐ" },
+  { id: 710, en: "import", ja: "輸入、輸入する" },
+  { id: 711, en: "fortunate", ja: "幸運な" },
+  { id: 712, en: "proficiency", ja: "熟練性" },
+  { id: 713, en: "sustain", ja: "保持する" },
+  { id: 714, en: "transcript", ja: "複写、成績証明書" },
+  { id: 715, en: "overcome", ja: "克服する" },
+  { id: 716, en: "utility", ja: "効用" },
+  { id: 717, en: "whereas", ja: "一方で" },
+  { id: 718, en: "income", ja: "収入" },
+  { id: 719, en: "mere", ja: "単に、単なる" },
+  { id: 720, en: "competence", ja: "能力、適性" },
+  { id: 721, en: "insight", ja: "洞察" },
+  { id: 722, en: "discontinue", ja: "やめる、中止する" },
+  { id: 723, en: "precise", ja: "正確な" },
+  { id: 724, en: "crucial", ja: "重要な" },
+  { id: 725, en: "reluctant", ja: "しぶしぶの" },
+  { id: 726, en: "perceive", ja: "知覚する、認める" },
+  { id: 727, en: "controversial", ja: "議論のある" },
+  { id: 728, en: "fundamental", ja: "基本的な" },
+  { id: 729, en: "gradually", ja: "だんだんと、徐々に" },
+  { id: 730, en: "domestic", ja: "国内の" },
+  { id: 731, en: "complicated", ja: "複雑な" },
+  { id: 732, en: "absence", ja: "欠席" },
+  { id: 733, en: "shortage", ja: "欠品、不足" },
+  { id: 734, en: "landlord", ja: "大家、地主" },
+  { id: 735, en: "current", ja: "現在の" },
+  { id: 736, en: "completely", ja: "完全に" },
+  { id: 737, en: "legal", ja: "法的な" },
+  { id: 738, en: "resume", ja: "再開する、履歴書" },
+  { id: 739, en: "latest", ja: "最新の" },
+  { id: 740, en: "except", ja: "除いて" },
+  { id: 741, en: "proposal", ja: "提案" },
+  { id: 742, en: "device", ja: "機器、装置" },
+  { id: 743, en: "reduction", ja: "削減、割引" },
+  { id: 744, en: "automated", ja: "自動化した" },
+  { id: 745, en: "establish", ja: "設立する" },
+  { id: 746, en: "convention", ja: "大会" },
+  { id: 747, en: "secretarial", ja: "秘書の" },
+  { id: 748, en: "equivalent", ja: "等価の" },
+  { id: 749, en: "invention", ja: "発明" },
+  { id: 750, en: "survive", ja: "生き残る" },
+  { id: 751, en: "destructive", ja: "破壊的な" },
+  { id: 752, en: "massive", ja: "大規模な" },
+  { id: 753, en: "remedy", ja: "救済策、治療" },
+  { id: 754, en: "usher", ja: "案内係" },
+  { id: 755, en: "digest", ja: "消化する" },
+  { id: 756, en: "urgency", ja: "緊急性" },
+  { id: 757, en: "servant", ja: "使用人、召使" },
+  { id: 758, en: "display", ja: "(商品などの)陳列" },
+  { id: 759, en: "delivery", ja: "配達、送付" },
+  { id: 760, en: "receipt", ja: "領収書、受け取り" },
+  { id: 761, en: "engineer", ja: "技術者" },
+  { id: 762, en: "dealer", ja: "貿易業者、卸業者" },
+  { id: 763, en: "path", ja: "歩道、散歩道" },
+  { id: 764, en: "credit card", ja: "クレジットカード" },
+  { id: 765, en: "court", ja: "裁判所" },
+  { id: 766, en: "copyright", ja: "著作権、版権" },
+  { id: 767, en: "consultant", ja: "コンサルタント、顧問" },
+  { id: 768, en: "composer", ja: "作曲家" },
+  { id: 769, en: "seminar", ja: "研究会、セミナー" },
+  { id: 770, en: "laborer", ja: "作業員" },
+  { id: 771, en: "message", ja: "伝言" },
+  { id: 772, en: "journalist", ja: "ジャーナリスト" },
+  { id: 773, en: "librarian", ja: "図書館員" },
+  { id: 774, en: "license", ja: "免許" },
+  { id: 775, en: "mall", ja: "モール、ショッピングセンター" },
+  { id: 776, en: "performer", ja: "役者、演奏者" },
+  { id: 777, en: "memo", ja: "覚書、メモ" },
+  { id: 778, en: "motorcycle", ja: "オートバイ" },
+  { id: 779, en: "officer", ja: "役人、公務員" },
+  { id: 780, en: "operator", ja: "操作者、電話交換手" },
+  { id: 781, en: "fire engine", ja: "消防車" },
+  { id: 782, en: "owner", ja: "所有者、持ち主" },
+  { id: 783, en: "package", ja: "梱包、包装" },
+  { id: 784, en: "pamphlet", ja: "小冊子、パンフレット" },
+  { id: 785, en: "manager", ja: "経営者、支配人、部長" },
+  { id: 786, en: "audio-visual", ja: "視聴覚の" },
+  { id: 787, en: "attire", ja: "衣装" },
+  { id: 788, en: "bookkeeper", ja: "帳簿係" },
+  { id: 789, en: "telegram", ja: "電報" },
+  { id: 790, en: "blueprint", ja: "青写真" },
+  { id: 791, en: "bonus", ja: "特別手当" },
+  { id: 792, en: "tour", ja: "視察、小旅行" },
+  { id: 793, en: "cashier", ja: "勘定係、レジ係" },
+  { id: 794, en: "starting salary", ja: "初任給" },
+  { id: 795, en: "ballroom", ja: "(ホテルなどの)舞踏場" },
+  { id: 796, en: "telephone directory", ja: "電話帳" },
+  { id: 797, en: "clerk", ja: "事務員" },
+  { id: 798, en: "cash", ja: "現金" },
+  { id: 799, en: "guideline", ja: "指針" },
+  { id: 800, en: "appendix", ja: "付録、追加" },
+  { id: 801, en: "grain", ja: "穀物" },
+  { id: 802, en: "attorney", ja: "弁護士" },
+  { id: 803, en: "goodwill", ja: "親善" },
+  { id: 804, en: "fixed salary", ja: "固定給" },
+  { id: 805, en: "audit", ja: "会計監査" },
+  { id: 806, en: "governor", ja: "州知事" },
+  { id: 807, en: "agency", ja: "代理店" },
+  { id: 808, en: "install", ja: "(装置を)取り付ける" },
+  { id: 809, en: "inhabitant", ja: "居住者" },
+  { id: 810, en: "absentee", ja: "欠席者" },
+  { id: 811, en: "headline", ja: "(新聞などの)大見出し" },
+  { id: 812, en: "index", ja: "索引、指数" },
+  { id: 813, en: "anniversary", ja: "(毎年の)記念日" },
+  { id: 814, en: "identification", ja: "身分証明" },
+  { id: 815, en: "amateur", ja: "素人" },
+  { id: 816, en: "highlight", ja: "呼び物、ハイライト" },
+  { id: 817, en: "headquarters", ja: "本部" },
+  { id: 818, en: "harvest", ja: "収穫" },
+  { id: 819, en: "indirect", ja: "間接的な" },
+  { id: 820, en: "discount", ja: "割引、値引き" },
+  { id: 821, en: "chamber", ja: "集会場" },
+  { id: 822, en: "commission", ja: "(代理)手数料" },
+  { id: 823, en: "commitment", ja: "委託、委任" },
+  { id: 824, en: "commuter", ja: "通勤者" },
+  { id: 825, en: "congressman", ja: "下院議員" },
+  { id: 826, en: "corporate", ja: "法人組織の" },
+  { id: 827, en: "correspondence", ja: "文通、通信" },
+  { id: 828, en: "cancel", ja: "取り消す、清算する" },
+  { id: 829, en: "brokerage", ja: "仲買手数料" },
+  { id: 830, en: "breakdown", ja: "(機械の)故障" },
+  { id: 831, en: "boycott", ja: "不買運動" },
+  { id: 832, en: "deposit", ja: "貯金する" },
+  { id: 833, en: "exchange", ja: "両替する" },
+  { id: 834, en: "electrician", ja: "電気技術者" },
+  { id: 835, en: "banquet", ja: "(公式の)宴会" },
+  { id: 836, en: "bargain", ja: "有利な取引、契約" },
+  { id: 837, en: "bid", ja: "入札" },
+  { id: 838, en: "debit", ja: "(帳簿の)借方" },
+  { id: 839, en: "enrollment", ja: "入会、加入" },
+  { id: 840, en: "diplomat", ja: "外交官" },
+  { id: 841, en: "bond", ja: "拘束、債権" },
+  { id: 842, en: "educator", ja: "教育学者、先生" },
+  { id: 843, en: "earnings", ja: "収入" },
+  { id: 844, en: "duplicate", ja: "複製する" },
+  { id: 845, en: "distributor", ja: "販売代理店" },
+  { id: 846, en: "commander", ja: "命令者、指揮官" },
+  { id: 847, en: "trade", ja: "商売、貿易" },
+  { id: 848, en: "internal", ja: "国内の、内部の" },
+  { id: 849, en: "recruit", ja: "新入社員" },
+  { id: 850, en: "pharmacy", ja: "薬局" },
+  { id: 851, en: "unemployment", ja: "失業" },
+  { id: 852, en: "tenant", ja: "賃借人" },
+  { id: 853, en: "update", ja: "最新式にする" },
+  { id: 854, en: "questionnaire", ja: "アンケート" },
+  { id: 855, en: "utilities", ja: "電気・ガス・水道料" },
+  { id: 856, en: "province", ja: "州、地域" },
+  { id: 857, en: "superintendent", ja: "指導監督者、管理者" },
+  { id: 858, en: "rear", ja: "背後、後方" },
+  { id: 859, en: "secondhand", ja: "中古の" },
+  { id: 860, en: "skyscraper", ja: "超高層ビル" },
+  { id: 861, en: "supplier", ja: "部品製造業者" },
+  { id: 862, en: "shorthand", ja: "速記" },
+  { id: 863, en: "shipping", ja: "船積み" },
+  { id: 864, en: "stockholder", ja: "株主" },
+  { id: 865, en: "registered mail", ja: "書留郵便" },
+  { id: 866, en: "surface mail", ja: "船便" },
+  { id: 867, en: "scandal", ja: "醜聞、スキャンダル" },
+  { id: 868, en: "symposium", ja: "座談会、シンポジウム" },
+  { id: 869, en: "saving", ja: "貯金、節約" },
+  { id: 870, en: "retail", ja: "小売" },
+  { id: 871, en: "resort", ja: "行楽地、方策" },
+  { id: 872, en: "vessel", ja: "船、血管" },
+  { id: 873, en: "session", ja: "会合、学期" },
+  { id: 874, en: "mechanics", ja: "機構、仕組み" },
+  { id: 875, en: "predecessor", ja: "前任者、先輩" },
+  { id: 876, en: "maestro", ja: "大家、巨匠" },
+  { id: 877, en: "luncheon", ja: "昼食(会)" },
+  { id: 878, en: "lottery", ja: "宝くじ、抽選" },
+  { id: 879, en: "liability", ja: "負債" },
+  { id: 880, en: "millionaire", ja: "大金持ち、大富豪" },
+  { id: 881, en: "developer", ja: "宅地開発業者" },
+  { id: 882, en: "lawsuit", ja: "訴訟、告訴" },
+  { id: 883, en: "lodging", ja: "宿泊(設備)" },
+  { id: 884, en: "peddler", ja: "行商人" },
+  { id: 885, en: "veteran", ja: "退役軍人" },
+  { id: 886, en: "pension", ja: "年金" },
+  { id: 887, en: "peer", ja: "同僚" },
+  { id: 888, en: "pedestrian", ja: "歩行者" },
+  { id: 889, en: "minister", ja: "大臣" },
+  { id: 890, en: "wholesale", ja: "卸売り" },
+  { id: 891, en: "outdoors", ja: "野外で" },
+  { id: 892, en: "work load", ja: "作業負荷、標準作業量" },
+  { id: 893, en: "workshop", ja: "職場、作業場" },
+  { id: 894, en: "visa", ja: "査証、ビザ" },
+  { id: 895, en: "tariff", ja: "関税表、運賃表" },
+  { id: 896, en: "gratuity", ja: "こころづけ、チップ" },
+  { id: 897, en: "dividend", ja: "(株の)配当" },
+  { id: 898, en: "infringement", ja: "法律違反、版権侵害" },
+  { id: 899, en: "obituary", ja: "死亡記事" },
+  { id: 900, en: "incur", ja: "(損害などを)招く" },
+  { id: 901, en: "incidental expense", ja: "雑費" },
+  { id: 902, en: "nominal", ja: "名目上の" },
+  { id: 903, en: "fiscal", ja: "会計の" },
+  { id: 904, en: "overdue", ja: "支払期限を過ぎた" },
+  { id: 905, en: "exempt", ja: "免除する" },
+  { id: 906, en: "endorse", ja: "(手形に)裏書する" },
+  { id: 907, en: "petty", ja: "ささいな" },
+  { id: 908, en: "smuggle", ja: "密輸入する" },
+  { id: 909, en: "proximity", ja: "近接、近いこと" },
+  { id: 910, en: "quota", ja: "割り当て、持分" },
+  { id: 911, en: "deficit", ja: "欠損、赤字" },
+  { id: 912, en: "defer", ja: "延期する" },
+  { id: 913, en: "curtail", ja: "(費用を)節減する" },
+  { id: 914, en: "remit", ja: "送金する" },
+  { id: 915, en: "jury", ja: "陪審" },
+  { id: 916, en: "celebrity", ja: "名士" },
+  { id: 917, en: "perjury", ja: "偽証(罪)" },
+  { id: 918, en: "administration", ja: "管理、行政" },
+  { id: 919, en: "analyst", ja: "分析者" },
+  { id: 920, en: "review", ja: "検討する" },
+  { id: 921, en: "currently", ja: "現在" },
+  { id: 922, en: "designate", ja: "指名する" },
+  { id: 923, en: "charge", ja: "請求する" },
+  { id: 924, en: "instruction", ja: "説明書" },
+  { id: 925, en: "permanent", ja: "常設の" },
+  { id: 926, en: "release", ja: "発表する" },
+  { id: 927, en: "explore", ja: "調査する" },
+  { id: 928, en: "accompany", ja: "添付する、同行する" },
+  { id: 929, en: "ship", ja: "出荷する、輸送する" },
+  { id: 930, en: "explain", ja: "説明する、明らかにする" },
+  { id: 931, en: "handle", ja: "ハンドル、扱う" },
+  { id: 932, en: "suitable", ja: "ふさわしい" },
+];
+
+let stats = {};
+try { stats = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch (e) { stats = {}; }
+
+let mode = "ja-en";
+let current = null;
+let choices = [];
+let feedback = null;
+let selectedChoiceId = null;
+let inputValue = "";
+let resetStep = 0; // 0: 非表示, 1: 1回目の確認, 2: 2回目の確認
+
+// 4択のキーボード操作用: 各行のいずれのキーでもその選択肢を選べる(Enterキーとの同時押しが必要)
+const KEY_ROWS = [["1", "q", "a", "z"], ["2", "w", "s", "x"], ["3", "e", "d", "c"], ["4", "r", "f", "v"]];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function weakWords() {
+  return WORDS.filter((w) => {
+    const s = stats[w.id];
+    return s && s.wrong > s.right;
+  });
+}
+
+function poolForMode() {
+  return mode === "weak" ? weakWords() : WORDS;
+}
+
+function pickWord(pool, excludeId) {
+  const candidates = pool.length > 1 ? pool.filter((w) => w.id !== excludeId) : pool;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+// 和→英・英→和はそれぞれ独立に、全単語を1周し終えるまで同じ単語を出題しない
+const cycleQueues = { "ja-en": [], "en-ja": [] };
+// 各方向で、今の周回で出題済み(=解答済み)の単語数(1周したら0に戻る)
+const cycleProgress = { "ja-en": 0, "en-ja": 0 };
+// 1周し終えて、専用画面で一時停止中かどうか
+const lapDone = { "ja-en": false, "en-ja": false };
+// 他のタブに移動しても、答えていない問題を保持しておくための保存領域
+const savedQuestion = { "ja-en": null, "en-ja": null };
+
+function refillCycleQueue(m) {
+  cycleQueues[m] = shuffle(WORDS.map((w) => w.id));
+  cycleProgress[m] = 0;
+  lapDone[m] = false;
+}
+
+function nextIdFromCycle(m) {
+  cycleProgress[m]++;
+  return cycleQueues[m].pop();
+}
+
+function cycleProgressPercent(m) {
+  return WORDS.length ? Math.floor((cycleProgress[m] / WORDS.length) * 100) : 0;
+}
+
+function snapshotQuestion(m) {
+  return m === "ja-en"
+    ? { current, feedback, inputValue }
+    : { current, choices, feedback, selectedChoiceId };
+}
+
+function applySnapshot(m, snap) {
+  current = snap.current;
+  feedback = snap.feedback;
+  if (m === "ja-en") {
+    inputValue = snap.inputValue;
+  } else {
+    choices = snap.choices;
+    selectedChoiceId = snap.selectedChoiceId;
+  }
+}
+
+function saveStats() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stats)); } catch (e) { console.error("保存に失敗しました", e); }
+}
+
+function resetAllStats() {
+  stats = {};
+  saveStats();
+  resetStep = 0;
+  render();
+}
+
+function recordAnswer(wordId, correct, direction) {
+  const cur = stats[wordId] || { right: 0, wrong: 0 };
+  const dir = cur[direction] || { right: 0, wrong: 0 };
+  stats[wordId] = {
+    right: cur.right + (correct ? 1 : 0),
+    wrong: cur.wrong + (correct ? 0 : 1),
+    enJa: cur.enJa || { right: 0, wrong: 0 },
+    jaEn: cur.jaEn || { right: 0, wrong: 0 },
+    [direction]: { right: dir.right + (correct ? 1 : 0), wrong: dir.wrong + (correct ? 0 : 1) },
+  };
+  saveStats();
+}
+
+// 英→和・和→英それぞれで、間違えた単語とその回数を集計する
+function mistakesByDirection(direction) {
+  return WORDS
+    .map((w) => ({ word: w, wrong: (stats[w.id] && stats[w.id][direction] && stats[w.id][direction].wrong) || 0 }))
+    .filter((x) => x.wrong > 0)
+    .sort((a, b) => b.wrong - a.wrong);
+}
+
+function nextWord() {
+  const pool = poolForMode();
+  inputValue = "";
+  feedback = null;
+  selectedChoiceId = null;
+  if (!pool.length) { current = null; choices = []; return; }
+  const excludeId = current ? current.id : null;
+  let w;
+  if (mode === "ja-en" || mode === "en-ja") {
+    if (cycleQueues[mode].length === 0) {
+      if (cycleProgress[mode] > 0) {
+        // 直前に答えた単語が、この周回で最後の1語だった → 専用画面で一時停止
+        lapDone[mode] = true;
+        current = null;
+        return;
+      }
+      refillCycleQueue(mode);
+    }
+    const nextId = nextIdFromCycle(mode);
+    w = WORDS.find((x) => x.id === nextId);
+  } else {
+    w = pickWord(pool, excludeId);
+  }
+  current = w;
+  if (mode === "en-ja" || mode === "weak") {
+    const distractors = shuffle(WORDS.filter((x) => x.id !== w.id)).slice(0, 3);
+    choices = shuffle([w, ...distractors]);
+  }
+}
+
+// 1周終了の専用画面で「次の周回を始める」を押したときに呼ばれる
+function continueLap(m) {
+  refillCycleQueue(m);
+  savedQuestion[m] = null;
+  nextWord();
+  render();
+}
+
+function switchMode(m) {
+  // 和→英・英→和は、まだ答えていない問題があれば保存しておく(戻ってきたときに再開するため)
+  if (mode === "ja-en" || mode === "en-ja") {
+    savedQuestion[mode] = snapshotQuestion(mode);
+  }
+
+  mode = m;
+
+  if (m === "mistakes") {
+    feedback = null;
+    selectedChoiceId = null;
+  } else if (m === "ja-en" || m === "en-ja") {
+    if (lapDone[m]) {
+      current = null;
+      feedback = null;
+    } else if (savedQuestion[m]) {
+      applySnapshot(m, savedQuestion[m]);
+    } else {
+      nextWord();
+    }
+  } else {
+    nextWord();
+  }
+  render();
+}
+
+function submitTyped() {
+  if (!current || feedback) return;
+  const correct = inputValue.trim().toLowerCase() === current.en.toLowerCase();
+  feedback = { correct, answer: current.en };
+  recordAnswer(current.id, correct, "jaEn");
+}
+
+function submitChoice(choiceId) {
+  if (!current || feedback) return;
+  const choiceWord = WORDS.find((w) => w.id === choiceId);
+  const correct = choiceWord.id === current.id;
+  selectedChoiceId = choiceId;
+  feedback = { correct, answer: current.ja };
+  recordAnswer(current.id, correct, "enJa");
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function statsSummary() {
+  let totalAttempts = 0, totalCorrect = 0;
+  Object.values(stats).forEach((s) => { totalAttempts += s.right + s.wrong; totalCorrect += s.right; });
+  if (totalAttempts === 0) return "まだ記録がありません";
+  const acc = Math.round((totalCorrect / totalAttempts) * 100);
+  return `正解率 ${acc}%（${totalCorrect}/${totalAttempts}）`;
+}
+
+const MODE_META = {
+  "ja-en": { label: "和→英", sub: "日本語の意味に合う英単語を入力" },
+  "en-ja": { label: "英→和", sub: "英単語に合う日本語を4つから選択" },
+  "weak": { label: "苦手単語", sub: "間違いが多い単語だけを復習" },
+  "mistakes": { label: "間違い集計", sub: "英→和・和→英それぞれで間違えた回数をまとめて表示" },
+};
+
+function mistakeTableHtml(title, list) {
+  const rows = list.length
+    ? list.map((x) => `<tr><td>${esc(x.word.en)}</td><td>${esc(x.word.ja)}</td><td>${x.wrong}</td></tr>`).join("")
+    : `<tr><td colspan="3" class="mistake-empty">まだ間違いの記録がありません</td></tr>`;
+  return `
+    <div class="mistake-block">
+      <h2 class="mistake-title">${title}</h2>
+      <div class="table-scroll">
+        <table class="mistake-table">
+          <thead><tr><th>英単語</th><th>意味</th><th>回数</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderMistakes() {
+  return `
+    <div class="mistakes-wrap">
+      ${mistakeTableHtml("英→和で間違えた単語", mistakesByDirection("enJa"))}
+      ${mistakeTableHtml("和→英で間違えた単語", mistakesByDirection("jaEn"))}
+    </div>`;
+}
+
+function resetModalHtml() {
+  if (resetStep === 0) return "";
+  const msg = resetStep === 1 ? "リセットしますか？" : "本当にリセットしますか？";
+  return `
+    <div class="modal-backdrop">
+      <div class="modal-box">
+        <p class="modal-msg">${msg}</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" data-action="reset-no">いいえ</button>
+          <button class="btn-primary" data-action="reset-yes">はい</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function render() {
+  const app = document.getElementById("app");
+  const wc = weakWords().length;
+
+  const tabsHtml = Object.keys(MODE_META).map((key) => {
+    const label = key === "weak" ? `苦手単語 (${wc})` : MODE_META[key].label;
+    return `<div class="tab ${mode === key ? "active" : ""}" data-mode="${key}">${label}</div>`;
+  }).join("");
+
+  const showProgress = mode === "ja-en" || mode === "en-ja";
+
+  let bodyHtml = "";
+  if (mode === "mistakes") {
+    bodyHtml = renderMistakes();
+  } else if ((mode === "ja-en" || mode === "en-ja") && lapDone[mode]) {
+    bodyHtml = `
+      <div class="empty-state">
+        <p>🎉 登録されている${WORDS.length}語をすべて出題しました。<br>お疲れさまでした！</p>
+        <button class="btn-primary" style="margin-top:4px;width:auto;padding:10px 20px;" data-action="continue-lap">次の周回を始める</button>
+      </div>`;
+  } else if (!current) {
+    bodyHtml = `
+      <div class="empty-state">
+        <p>苦手単語はまだありません。<br>他のモードで練習して、間違えた単語をここに集めましょう。</p>
+        <button class="btn-primary" style="margin-top:4px;width:auto;padding:10px 20px;" data-action="start-ja-en">和→英モードへ</button>
+      </div>`;
+  } else if (mode === "ja-en") {
+    bodyHtml = `
+      <div class="word-display"><p>${esc(current.ja)}</p></div>
+      <div>
+        <input type="text" id="typed-input" placeholder="英単語を入力" autocomplete="off" spellcheck="false"
+          value="${esc(inputValue)}" ${feedback ? "disabled" : ""}>
+        ${feedback ? feedbackHtml() : `<button class="btn-primary" data-action="submit-typed" ${inputValue.trim() ? "" : "disabled"}>答え合わせ</button>`}
+      </div>`;
+  } else {
+    bodyHtml = `
+      <div class="word-display"><p>${esc(current.en)}</p></div>
+      <div class="choices">
+        ${choices.map((c, i) => {
+          let cls = "choice-btn";
+          if (feedback) {
+            if (c.id === current.id) cls += " correct";
+            else if (c.id === selectedChoiceId) cls += " wrong";
+            else cls += " faded";
+          }
+          const keys = KEY_ROWS[i].map((k) => k.toUpperCase());
+          const hint = `${keys[0]}${keys[1]}<br>${keys[2]}${keys[3]}`;
+          return `<button class="${cls}" data-choice-id="${c.id}" ${feedback ? "disabled" : ""}><span class="key-hint">${hint}</span>${esc(c.ja)}</button>`;
+        }).join("")}
+      </div>
+      ${feedback ? `<div>${feedbackHtml(false)}</div>` : ""}`;
+  }
+
+  app.innerHTML = `
+    <header>
+      <h1>TOEIC単語ドリル</h1>
+      <p>毎日コツコツ、赤ペンで丸をつけるように</p>
+    </header>
+    <div class="tabs">${tabsHtml}</div>
+    <div class="card">
+      <div class="card-top">
+        <p class="sub-label">${MODE_META[mode].sub}</p>
+        <div class="card-top-right">
+          ${showProgress ? `<span class="progress-label">1周の出題進捗 ${cycleProgressPercent(mode)}%</span>` : ""}
+          <button class="reset-link" data-action="reset-stats">学習記録をリセット</button>
+        </div>
+      </div>
+      ${bodyHtml}
+      ${feedback ? `<div class="stamp">${feedback.correct ? "○" : "✕"}</div>` : ""}
+    </div>
+    <footer>
+      <span>${statsSummary()}</span>
+      <span>記録はこの端末に自動保存されます</span>
+    </footer>
+    ${resetModalHtml()}
+  `;
+
+  attachEvents();
+}
+
+function feedbackHtml(showAnswer = true) {
+  const cls = feedback.correct ? "correct" : "wrong";
+  const text = feedback.correct ? "正解です" : (showAnswer ? `不正解 — 正解は "${esc(feedback.answer)}"` : "不正解");
+  return `
+    <div class="feedback">
+      <div class="feedback-line ${cls}">${feedback.correct ? "✓" : "✕"} ${text}</div>
+      <button class="btn-primary" data-action="next">次の単語へ</button>
+    </div>`;
+}
+
+function attachEvents() {
+  document.querySelectorAll("[data-mode]").forEach((el) => {
+    el.addEventListener("click", () => switchMode(el.dataset.mode));
+  });
+  const nextBtn = document.querySelector('[data-action="next"]');
+  if (nextBtn) nextBtn.addEventListener("click", () => { nextWord(); render(); });
+
+  const startBtn = document.querySelector('[data-action="start-ja-en"]');
+  if (startBtn) startBtn.addEventListener("click", () => switchMode("ja-en"));
+
+  const submitBtn = document.querySelector('[data-action="submit-typed"]');
+  if (submitBtn) submitBtn.addEventListener("click", () => { submitTyped(); render(); });
+
+  document.querySelectorAll("[data-choice-id]").forEach((el) => {
+    el.addEventListener("click", () => { submitChoice(Number(el.dataset.choiceId)); render(); });
+  });
+
+  const input = document.getElementById("typed-input");
+  if (input) {
+    input.focus();
+    input.selectionStart = input.selectionEnd = input.value.length;
+    input.addEventListener("input", (e) => {
+      inputValue = e.target.value;
+      const btn = document.querySelector('[data-action="submit-typed"]');
+      if (btn) btn.disabled = !inputValue.trim();
+    });
+  }
+
+  const resetBtn = document.querySelector('[data-action="reset-stats"]');
+  if (resetBtn) resetBtn.addEventListener("click", () => { resetStep = 1; render(); });
+
+  const resetNo = document.querySelector('[data-action="reset-no"]');
+  if (resetNo) resetNo.addEventListener("click", () => { resetStep = 0; render(); });
+
+  const resetYes = document.querySelector('[data-action="reset-yes"]');
+  if (resetYes) resetYes.addEventListener("click", () => {
+    if (resetStep === 1) { resetStep = 2; render(); } else { resetAllStats(); }
+  });
+
+  const continueBtn = document.querySelector('[data-action="continue-lap"]');
+  if (continueBtn) continueBtn.addEventListener("click", () => continueLap(mode));
+
+  // クリックでボタンにフォーカスが残ると、直後のEnterキーがブラウザ標準の
+  // 「フォーカス中のボタンをEnterで再度押す」動作と衝突することがあるため防ぐ
+  document.querySelectorAll("button").forEach((el) => {
+    el.addEventListener("mousedown", (e) => e.preventDefault());
+  });
+}
+
+// Enterキーで「答え合わせ」「次の単語へ」、数字/QWER/ASDF/ZXCVキーで4択を操作できるようにする(一度だけ登録)
+document.addEventListener("keydown", (e) => {
+  // キーを押しっぱなしにした時の連続発火(オートリピート)による誤操作を防ぐ
+  if (e.repeat) return;
+
+  if (e.key === "Enter") {
+    if ((mode === "ja-en" || mode === "en-ja") && lapDone[mode]) {
+      e.preventDefault();
+      continueLap(mode);
+      return;
+    }
+    if (feedback) {
+      e.preventDefault();
+      nextWord();
+      render();
+    } else if (mode === "ja-en" && inputValue.trim()) {
+      e.preventDefault();
+      submitTyped();
+      render();
+    } else if (mode === "en-ja" || mode === "weak") {
+      // このモードではEnterに割り当てた動作がなくても、ブラウザ標準の
+      // 「フォーカス中のボタンをEnterで押す」動作が誤って発火しないようにする
+      e.preventDefault();
+    }
+    return;
+  }
+
+  if ((mode === "en-ja" || mode === "weak") && current && !feedback) {
+    const key = e.key.toLowerCase();
+    const idx = KEY_ROWS.findIndex((row) => row.includes(key));
+    if (idx !== -1 && choices[idx]) {
+      e.preventDefault();
+      submitChoice(choices[idx].id);
+      render();
+    }
+  }
+});
+
+nextWord();
+render();
+</script>
+</body>
+</html>
