@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>カウントダウン・マトリクス</title>
+<style>
+  :root {
+    --glow: #ff2b2b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #000;
+    color: var(--glow);
+    font-family: "Courier New", monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    overflow: hidden;
+  }
+  body.exploded {
+    animation: flash 0.3s steps(1) infinite;
+  }
+  @keyframes flash {
+    0%, 49% { background: #000; }
+    50%, 100% { background: #3a0000; }
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .setup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+  }
+  .setup label {
+    font-size: 14px;
+    letter-spacing: 2px;
+    opacity: 0.8;
+  }
+  .setup input[type="date"],
+  .setup input[type="time"] {
+    background: #111;
+    border: 1px solid var(--glow);
+    color: var(--glow);
+    font-family: inherit;
+    font-size: 16px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    outline: none;
+  }
+  .setup button {
+    background: #200;
+    border: 2px solid var(--glow);
+    color: var(--glow);
+    font-family: inherit;
+    font-size: 16px;
+    letter-spacing: 3px;
+    padding: 10px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-shadow: 0 0 6px var(--glow);
+    transition: background 0.15s, transform 0.1s;
+  }
+  .setup button:hover { background: #400; }
+  .setup button:active { transform: scale(0.96); }
+  .setup button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .display {
+    font-size: clamp(48px, 12vw, 160px);
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    text-shadow:
+      0 0 10px var(--glow),
+      0 0 30px var(--glow),
+      0 0 60px rgba(255,43,43,0.5);
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+  }
+  .display.done {
+    animation: pulse 0.6s infinite alternate;
+  }
+  @keyframes pulse {
+    from { text-shadow: 0 0 10px var(--glow), 0 0 30px var(--glow); }
+    to   { text-shadow: 0 0 30px #fff, 0 0 80px var(--glow), 0 0 120px var(--glow); }
+  }
+
+  .sub {
+    font-size: 16px;
+    letter-spacing: 4px;
+    opacity: 0.7;
+  }
+
+  .target-info {
+    font-size: 14px;
+    opacity: 0.6;
+    letter-spacing: 1px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+  <div class="panel">
+    <div class="sub" id="statusLabel">TARGET TIME NOT SET</div>
+    <div class="display" id="display">00:00:00</div>
+    <div class="target-info" id="targetInfo"></div>
+  </div>
+
+  <div class="setup" id="setupPanel">
+    <label for="dateInput">DATE</label>
+    <input type="date" id="dateInput">
+    <label for="timeInput">TIME</label>
+    <input type="time" id="timeInput" step="1" value="00:00:00">
+    <button id="startBtn">START</button>
+    <button id="stopBtn" class="hidden">RESET</button>
+  </div>
+
+<script>
+  const dateInput = document.getElementById('dateInput');
+  const timeInput = document.getElementById('timeInput');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const display = document.getElementById('display');
+  const statusLabel = document.getElementById('statusLabel');
+  const targetInfo = document.getElementById('targetInfo');
+
+  // Default date input to today
+  const now = new Date();
+  dateInput.value = now.toISOString().slice(0, 10);
+
+  let timerId = null;
+  let targetTime = null;
+
+  function pad(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function formatRemaining(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  }
+
+  function tick() {
+    const remaining = targetTime.getTime() - Date.now();
+    if (remaining <= 0) {
+      display.textContent = '00:00:00';
+      display.classList.add('done');
+      statusLabel.textContent = 'TIME UP';
+      document.body.classList.add('exploded');
+      clearInterval(timerId);
+      timerId = null;
+      return;
+    }
+    display.textContent = formatRemaining(remaining);
+  }
+
+  function startCountdown() {
+    if (!dateInput.value || !timeInput.value) {
+      alert('日付と時刻を指定してください');
+      return;
+    }
+    const [h, m, s] = timeInput.value.split(':').map(Number);
+    const [y, mo, d] = dateInput.value.split('-').map(Number);
+    targetTime = new Date(y, mo - 1, d, h, m, s || 0);
+
+    if (isNaN(targetTime.getTime())) {
+      alert('日時が正しくありません');
+      return;
+    }
+
+    document.body.classList.remove('exploded');
+    display.classList.remove('done');
+    statusLabel.textContent = 'COUNTING DOWN';
+    targetInfo.textContent = `TARGET: ${dateInput.value} ${timeInput.value}`;
+
+    dateInput.disabled = true;
+    timeInput.disabled = true;
+    startBtn.classList.add('hidden');
+    stopBtn.classList.remove('hidden');
+
+    if (timerId) clearInterval(timerId);
+    tick();
+    timerId = setInterval(tick, 1000);
+  }
+
+  function resetCountdown() {
+    if (timerId) clearInterval(timerId);
+    timerId = null;
+    targetTime = null;
+    document.body.classList.remove('exploded');
+    display.classList.remove('done');
+    display.textContent = '00:00:00';
+    statusLabel.textContent = 'TARGET TIME NOT SET';
+    targetInfo.textContent = '';
+    dateInput.disabled = false;
+    timeInput.disabled = false;
+    startBtn.classList.remove('hidden');
+    stopBtn.classList.add('hidden');
+  }
+
+  startBtn.addEventListener('click', startCountdown);
+  stopBtn.addEventListener('click', resetCountdown);
+</script>
+</body>
+</html>
