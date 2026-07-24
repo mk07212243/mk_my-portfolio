@@ -80,7 +80,7 @@
   }
 
   .display {
-    font-size: clamp(48px, 12vw, 160px);
+    font-size: clamp(36px, 9vw, 120px);
     font-weight: bold;
     letter-spacing: 0.05em;
     text-shadow:
@@ -117,7 +117,7 @@
 
   <div class="panel">
     <div class="sub" id="statusLabel">TARGET TIME NOT SET</div>
-    <div class="display" id="display">00:00:00</div>
+    <div class="display" id="display">00:00:00:00</div>
     <div class="target-info" id="targetInfo"></div>
   </div>
 
@@ -151,17 +151,19 @@
   }
 
   function formatRemaining(ms) {
-    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const clamped = Math.max(0, ms);
+    const totalSeconds = Math.floor(clamped / 1000);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    const centis = Math.floor((clamped % 1000) / 10);
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}:${pad(centis)}`;
   }
 
   function tick() {
     const remaining = targetTime.getTime() - Date.now();
     if (remaining <= 0) {
-      display.textContent = '00:00:00';
+      display.textContent = '00:00:00:00';
       display.classList.add('done');
       statusLabel.textContent = 'TIME UP';
       document.body.classList.add('exploded');
@@ -198,7 +200,7 @@
 
     if (timerId) clearInterval(timerId);
     tick();
-    timerId = setInterval(tick, 1000);
+    timerId = setInterval(tick, 30);
   }
 
   function resetCountdown() {
@@ -207,7 +209,7 @@
     targetTime = null;
     document.body.classList.remove('exploded');
     display.classList.remove('done');
-    display.textContent = '00:00:00';
+    display.textContent = '00:00:00:00';
     statusLabel.textContent = 'TARGET TIME NOT SET';
     targetInfo.textContent = '';
     dateInput.disabled = false;
