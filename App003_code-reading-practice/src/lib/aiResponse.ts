@@ -1,0 +1,81 @@
+import type { Quiz } from "../data/problems";
+
+type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
+const PARSE_ERROR = "JSONとして読み取れませんでした。AIの回答をそのまま貼り付けているか確認してください。";
+
+function extractJson(text: string): unknown {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const raw = fenced ? fenced[1] : text;
+  return JSON.parse(raw.trim());
+}
+
+function isQuiz(value: unknown): value is Quiz {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.question === "string" &&
+    Array.isArray(v.choices) &&
+    v.choices.length >= 2 &&
+    v.choices.every((c) => typeof c === "string") &&
+    typeof v.correctIndex === "number" &&
+    v.correctIndex >= 0 &&
+    v.correctIndex < v.choices.length
+  );
+}
+
+export function parseGeneratedProblem(
+  text: string,
+): ParseResult<{ title: string; code: string; explanation: string; quiz?: Quiz }> {
+  let data: unknown;
+  try {
+    data = extractJson(text);
+  } catch {
+    return { ok: false, error: PARSE_ERROR };
+  }
+
+  if (typeof data !== "object" || data === null) {
+    return { ok: false, error: PARSE_ERROR };
+  }
+  const d = data as Record<string, unknown>;
+  if (typeof d.title !== "string" || typeof d.code !== "string" || typeof d.explanation !== "string") {
+    return { ok: false, error: "title, code, explanation が正しい形式で含まれていません。" };
+  }
+  if (d.quiz !== undefined && !isQuiz(d.quiz)) {
+    return { ok: false, error: "quiz の形式が正しくありません。" };
+  }
+
+  return {
+    ok: true,
+    value: {
+      title: d.title,
+      code: d.code,
+      explanation: d.explanation,
+      quiz: d.quiz as Quiz | undefined,
+    },
+  };
+}
+
+export type GradeVerdict = "correct" | "partial" | "incorrect";
+
+export function parseGradeResult(text: string): ParseResult<{ verdict: GradeVerdict; feedback: string }> {
+  let data: unknown;
+  try {
+    data = extractJson(text);
+  } catch {
+    return { ok: false, error: PARSE_ERROR };
+  }
+
+  if (typeof data !== "object" || data === null) {
+    return { ok: false, error: PARSE_ERROR };
+  }
+  const d = data as Record<string, unknown>;
+  if (
+    (d.verdict !== "correct" && d.verdict !== "partial" && d.verdict !== "incorrect") ||
+    typeof d.feedback !== "string"
+  ) {
+    return { ok: false, error: "verdict, feedback が正しい形式で含まれていません。" };
+  }
+
+  return { ok: true, value: { verdict: d.verdict, feedback: d.feedback } };
+}

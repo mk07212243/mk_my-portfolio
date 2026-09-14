@@ -1,8 +1,12 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import type { Language } from "../data/problems";
+import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
+import type { Category, Language } from "../data/problems";
 import { levelInfo, problems, topicLabels } from "../data/problems";
+import { useGeneratedProblems } from "../hooks/useGeneratedProblems";
 import { useProgress } from "../hooks/useProgress";
+import { buildGenerateProblemPrompt } from "../lib/aiPrompts";
+import { parseGeneratedProblem } from "../lib/aiResponse";
 
 const languageLabel: Record<Language, string> = {
   python: "Python",
@@ -17,9 +21,10 @@ export function CategoryProblemList() {
     topicId?: string;
   }>();
   const { progress } = useProgress();
+  const { generated, addProblem } = useGeneratedProblems();
 
   const filtered = useMemo(() => {
-    return problems.filter((p) => {
+    return [...problems, ...generated].filter((p) => {
       if (p.language !== language) return false;
       if (level !== undefined) {
         return p.category.kind === "level" && p.category.level === Number(level);
@@ -29,7 +34,7 @@ export function CategoryProblemList() {
       }
       return false;
     });
-  }, [language, level, topicId]);
+  }, [generated, language, level, topicId]);
 
   const heading =
     level !== undefined
@@ -58,16 +63,27 @@ export function CategoryProblemList() {
       </h1>
 
       <div className="mt-4">
-        <button
-          disabled
-          title="今後、外部AIサービスと連携して自動生成できるようにする予定です"
-          className="cursor-not-allowed rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-400 dark:border-slate-700 dark:text-slate-500"
-        >
-          AIで新しい問題を生成（準備中）
-        </button>
-        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-          今後、外部AIサービスと連携して自動生成できるようにする予定です。
-        </p>
+        <AiCopyPastePanel
+          toggleLabel="AIで新しい問題を生成する"
+          successMessage="問題を追加しました"
+          prompt={buildGenerateProblemPrompt(language, heading ?? "")}
+          onSubmit={(text) => {
+            const result = parseGeneratedProblem(text);
+            if (!result.ok) return { ok: false, error: result.error };
+            const category: Category =
+              level !== undefined
+                ? { kind: "level", level: Number(level) }
+                : { kind: "topic", topicId: topicId ?? "" };
+            addProblem({
+              id: `generated-${crypto.randomUUID()}`,
+              language,
+              category,
+              isGenerated: true,
+              ...result.value,
+            });
+            return { ok: true };
+          }}
+        />
       </div>
 
       <ul className="mt-6 flex flex-col gap-3">
@@ -79,8 +95,13 @@ export function CategoryProblemList() {
                 to={`/problems/${problem.id}`}
                 className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 px-4 py-3 transition hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500"
               >
-                <div className="font-medium text-slate-900 dark:text-slate-100">
+                <div className="flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
                   {problem.title}
+                  {problem.isGenerated && (
+                    <span className="whitespace-nowrap rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                      AI生成
+                    </span>
+                  )}
                 </div>
                 {mastery && (
                   <span

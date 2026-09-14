@@ -16,6 +16,7 @@ export type Problem = {
   code: string;
   explanation: string;
   quiz?: Quiz;
+  isGenerated?: boolean;
 };
 
 // トピックの表示ラベル。新しいテーマ(for文など)を追加する際はここに1行足すだけでよい。

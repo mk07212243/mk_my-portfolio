@@ -1,17 +1,38 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
 import { CodeBlock } from "../components/CodeBlock";
 import { problems } from "../data/problems";
+import { useGeneratedProblems } from "../hooks/useGeneratedProblems";
 import { useProgress } from "../hooks/useProgress";
+import { buildGradeNotePrompt } from "../lib/aiPrompts";
+import type { GradeVerdict } from "../lib/aiResponse";
+import { parseGradeResult } from "../lib/aiResponse";
+
+const verdictLabel: Record<GradeVerdict, string> = {
+  correct: "正解",
+  partial: "おおむね正解",
+  incorrect: "要復習",
+};
+
+const verdictStyle: Record<GradeVerdict, string> = {
+  correct: "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  partial: "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  incorrect: "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
+};
 
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const problem = problems.find((p) => p.id === id);
+  const { generated } = useGeneratedProblems();
+  const problem = [...problems, ...generated].find((p) => p.id === id);
   const { notes, setNote, progress, setMastery } = useProgress();
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
+  const [gradeResult, setGradeResult] = useState<{ verdict: GradeVerdict; feedback: string } | null>(
+    null,
+  );
 
   if (!problem) {
     return (
@@ -35,8 +56,13 @@ export function ProblemDetail() {
         ← 一覧に戻る
       </button>
 
-      <h1 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+      <h1 className="mt-3 flex items-center gap-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">
         {problem.title}
+        {problem.isGenerated && (
+          <span className="whitespace-nowrap rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+            AI生成
+          </span>
+        )}
       </h1>
 
       <div className="mt-4">
@@ -64,21 +90,29 @@ export function ProblemDetail() {
           >
             {showAnswer ? "答えを隠す" : "答えを見る"}
           </button>
-          <button
-            disabled
-            title="今後、外部AIサービスと連携して添削できるようにする予定です"
-            className="cursor-not-allowed rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-400 dark:border-slate-700 dark:text-slate-500"
-          >
-            AIに添削してもらう（準備中）
-          </button>
+          <AiCopyPastePanel
+            toggleLabel="AIに添削してもらう"
+            successMessage="フィードバックを反映しました"
+            prompt={buildGradeNotePrompt(problem.code, problem.explanation, notes[problem.id] ?? "")}
+            onSubmit={(text) => {
+              const result = parseGradeResult(text);
+              if (!result.ok) return { ok: false, error: result.error };
+              setGradeResult(result.value);
+              return { ok: true };
+            }}
+          />
         </div>
-        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-          今後、外部AIサービスと連携して添削できるようにする予定です。
-        </p>
 
         {showAnswer && (
           <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
             {problem.explanation}
+          </div>
+        )}
+
+        {gradeResult && (
+          <div className={`mt-3 rounded-lg border p-4 text-sm ${verdictStyle[gradeResult.verdict]}`}>
+            <span className="font-medium">{verdictLabel[gradeResult.verdict]}</span>
+            <p className="mt-1">{gradeResult.feedback}</p>
           </div>
         )}
       </div>
