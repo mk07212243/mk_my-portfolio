@@ -80,16 +80,8 @@ export function ProblemDetail() {
           value={notes[problem.id] ?? ""}
           onChange={(e) => setNote(problem.id, e.target.value)}
         />
-      </div>
 
-      <div className="mt-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setShowAnswer((v) => !v)}
-            className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-300"
-          >
-            {showAnswer ? "答えを隠す" : "答えを見る"}
-          </button>
+        <div className="mt-2">
           <AiCopyPastePanel
             toggleLabel="AIに添削してもらう"
             successMessage="フィードバックを反映しました"
@@ -103,16 +95,25 @@ export function ProblemDetail() {
           />
         </div>
 
-        {showAnswer && (
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-            {problem.explanation}
-          </div>
-        )}
-
         {gradeResult && (
           <div className={`mt-3 rounded-lg border p-4 text-sm ${verdictStyle[gradeResult.verdict]}`}>
             <span className="font-medium">{verdictLabel[gradeResult.verdict]}</span>
             <p className="mt-1">{gradeResult.feedback}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <button
+          onClick={() => setShowAnswer((v) => !v)}
+          className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-300"
+        >
+          {showAnswer ? "答えを隠す" : "答えを見る"}
+        </button>
+
+        {showAnswer && (
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+            {problem.explanation}
           </div>
         )}
       </div>

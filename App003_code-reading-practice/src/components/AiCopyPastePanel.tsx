@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CopyBox } from "./CopyBox";
 
 type SubmitResult = { ok: true } | { ok: false; error: string };
 
@@ -16,16 +17,17 @@ export function AiCopyPastePanel({
   const [open, setOpen] = useState(false);
   const [pasted, setPasted] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [justCopied, setJustCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const handleOpenAndCopy = async () => {
+    setOpen(true);
     try {
       await navigator.clipboard.writeText(prompt);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setJustCopied(true);
+      setTimeout(() => setJustCopied(false), 2000);
     } catch {
-      setError("コピーに失敗しました。プロンプトの欄を手動で選択してコピーしてください。");
+      // クリップボードへの自動コピーに失敗しても、下のCopyBoxから手動で再試行できる
     }
   };
 
@@ -47,10 +49,10 @@ export function AiCopyPastePanel({
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleOpenAndCopy}
         className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500"
       >
-        {toggleLabel}
+        {toggleLabel}（クリックでコピー）
       </button>
     );
   }
@@ -58,22 +60,14 @@ export function AiCopyPastePanel({
   return (
     <div className="mt-3 w-full basis-full rounded-lg border border-slate-200 p-4 dark:border-slate-700">
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        下のプロンプトをコピーして、ChatGPT・Gemini・Claudeなど好きなAIチャット（無料版でOK）に貼ってください。返ってきた回答を下の欄に貼って「反映する」を押すと結果が反映されます。
+        {justCopied
+          ? "プロンプトをコピーしました。ChatGPT・Gemini・Claudeなど好きなAIチャット（無料版でOK）に貼ってください。"
+          : "下のプロンプトをコピーして、ChatGPT・Gemini・Claudeなど好きなAIチャット（無料版でOK）に貼ってください。"}
+        返ってきた回答を下の欄に貼って「反映する」を押すと結果が反映されます。
       </p>
 
-      <div className="mt-2 flex items-start gap-2">
-        <textarea
-          readOnly
-          value={prompt}
-          rows={6}
-          className="flex-1 rounded-lg border border-slate-300 bg-slate-50 p-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-        />
-        <button
-          onClick={handleCopy}
-          className="whitespace-nowrap rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-300"
-        >
-          {copied ? "コピーしました" : "コピー"}
-        </button>
+      <div className="mt-2">
+        <CopyBox text={prompt} />
       </div>
 
       <label className="mt-4 block text-sm font-medium text-slate-700 dark:text-slate-300">

@@ -1,5 +1,9 @@
 import type { Language } from "../data/problems";
 
+export const setupPrompt = `あなたはプログラミング初学者向けの「ソースコードの先生」です。
+
+これから、コードリーディング練習用の問題を作ってもらったり、学習者が書いた「このコードが何をしているか」の理解メモを添削してもらったりします。それぞれの依頼には出力してほしいJSON形式を指定するので、必ず指定された形式のJSONのみで、前後の説明文やコードブロックのマークダウン(\`\`\`)を付けずに回答してください。`;
+
 const languageName: Record<Language, string> = {
   python: "Python",
   c: "C言語",

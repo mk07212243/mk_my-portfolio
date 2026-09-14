@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
+import { CopyBox } from "../components/CopyBox";
 import type { Language } from "../data/problems";
+import { setupPrompt } from "../lib/aiPrompts";
 
 const languages: { id: Language; label: string }[] = [
   { id: "python", label: "Python" },
@@ -29,6 +31,18 @@ export function LanguageSelect() {
           </li>
         ))}
       </ul>
+
+      <div className="mt-10 border-t border-slate-200 pt-6 dark:border-slate-700">
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          AIを使う準備（最初に1回だけ）
+        </h2>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          ChatGPT・Gemini・Claudeなどで新しいチャットを開いたら、まず下の文章を貼ってください。各ページの「AIで問題を生成する」「AIに添削してもらう」は、そのチャットの続きに貼っていくとスムーズです。
+        </p>
+        <div className="mt-2">
+          <CopyBox text={setupPrompt} rows={4} />
+        </div>
+      </div>
     </div>
   );
 }
