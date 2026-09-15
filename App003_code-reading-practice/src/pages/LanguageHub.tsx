@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { Language } from "../data/problems";
-import { levelInfo, problems, topicLabels } from "../data/problems";
+import { levelInfo, topicLabels } from "../data/problems";
+import { useAllProblems } from "../hooks/useAllProblems";
 
 const languageLabel: Record<Language, string> = {
   python: "Python",
@@ -11,10 +12,11 @@ const languageLabel: Record<Language, string> = {
 
 export function LanguageHub() {
   const { language } = useParams<{ language: Language }>();
+  const allProblems = useAllProblems();
 
   const languageProblems = useMemo(
-    () => problems.filter((p) => p.language === language),
-    [language],
+    () => allProblems.filter((p) => p.language === language),
+    [allProblems, language],
   );
 
   const levels = useMemo(() => {
@@ -32,6 +34,11 @@ export function LanguageHub() {
     }
     return Array.from(set);
   }, [languageProblems]);
+
+  const stockCount = useMemo(
+    () => languageProblems.filter((p) => p.category.kind === "stock").length,
+    [languageProblems],
+  );
 
   if (!language || !(language in languageLabel)) {
     return (
@@ -92,6 +99,27 @@ export function LanguageHub() {
                 {topicLabels[topicId] ?? topicId}
               </Link>
             ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">自分のコード</h2>
+        {stockCount === 0 ? (
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            まだ登録されていません。
+            <Link to="/import" className="ml-1 text-blue-600 hover:underline">
+              コードを登録する
+            </Link>
+          </p>
+        ) : (
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Link
+              to={`/languages/${language}/stock`}
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-900 transition hover:border-slate-400 dark:border-slate-700 dark:text-slate-100 dark:hover:border-slate-500"
+            >
+              登録したコードを見る（{stockCount}件）
+            </Link>
           </div>
         )}
       </section>

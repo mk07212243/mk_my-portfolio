@@ -32,6 +32,18 @@ export function LanguageSelect() {
         ))}
       </ul>
 
+      <div className="mt-6">
+        <Link
+          to="/import"
+          className="inline-block rounded-lg border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500"
+        >
+          ＋ 自分のソースコードを登録する
+        </Link>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          読み込んだコードだけを集めた自分専用の問題集を作れます。
+        </p>
+      </div>
+
       <div className="mt-10 border-t border-slate-200 pt-6 dark:border-slate-700">
         <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
           AIを使う準備（最初に1回だけ）

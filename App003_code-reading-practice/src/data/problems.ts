@@ -1,6 +1,9 @@
 export type Language = "python" | "c" | "javascript";
 
-export type Category = { kind: "level"; level: number } | { kind: "topic"; topicId: string };
+export type Category =
+  | { kind: "level"; level: number }
+  | { kind: "topic"; topicId: string }
+  | { kind: "stock" };
 
 export type Quiz = {
   question: string;
@@ -17,6 +20,7 @@ export type Problem = {
   explanation: string;
   quiz?: Quiz;
   isGenerated?: boolean;
+  isImported?: boolean;
 };
 
 // トピックの表示ラベル。新しいテーマ(for文など)を追加する際はここに1行足すだけでよい。

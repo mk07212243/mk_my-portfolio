@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
 import { CodeBlock } from "../components/CodeBlock";
-import { problems } from "../data/problems";
-import { useGeneratedProblems } from "../hooks/useGeneratedProblems";
+import { useAllProblems } from "../hooks/useAllProblems";
 import { useProgress } from "../hooks/useProgress";
 import { buildGradeNotePrompt } from "../lib/aiPrompts";
 import type { GradeVerdict } from "../lib/aiResponse";
@@ -24,15 +23,20 @@ const verdictStyle: Record<GradeVerdict, string> = {
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { generated } = useGeneratedProblems();
-  const problem = [...problems, ...generated].find((p) => p.id === id);
-  const { notes, setNote, progress, setMastery } = useProgress();
+  const allProblems = useAllProblems();
+  const problem = allProblems.find((p) => p.id === id);
+  const { progress, setMastery } = useProgress();
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [gradeResult, setGradeResult] = useState<{ verdict: GradeVerdict; feedback: string } | null>(
     null,
   );
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    setNote("");
+  }, [id]);
 
   if (!problem) {
     return (
@@ -63,6 +67,11 @@ export function ProblemDetail() {
             AI生成
           </span>
         )}
+        {problem.isImported && (
+          <span className="whitespace-nowrap rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+            マイコード
+          </span>
+        )}
       </h1>
 
       <div className="mt-4">
@@ -71,21 +80,21 @@ export function ProblemDetail() {
 
       <div className="mt-6">
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          このコードは何をしていると思いますか?（メモは自動保存されます）
+          このコードは何をしていると思いますか?（このメモは保存されません。ページを離れると消えます）
         </label>
         <textarea
           className="mt-2 w-full rounded-lg border border-slate-300 p-3 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           rows={4}
           placeholder="自分の言葉で説明してみましょう..."
-          value={notes[problem.id] ?? ""}
-          onChange={(e) => setNote(problem.id, e.target.value)}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
         />
 
         <div className="mt-2">
           <AiCopyPastePanel
             toggleLabel="AIに添削してもらう"
             successMessage="フィードバックを反映しました"
-            prompt={buildGradeNotePrompt(problem.code, problem.explanation, notes[problem.id] ?? "")}
+            prompt={buildGradeNotePrompt(problem.code, problem.explanation, note)}
             onSubmit={(text) => {
               const result = parseGradeResult(text);
               if (!result.ok) return { ok: false, error: result.error };
@@ -103,20 +112,22 @@ export function ProblemDetail() {
         )}
       </div>
 
-      <div className="mt-4">
-        <button
-          onClick={() => setShowAnswer((v) => !v)}
-          className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-300"
-        >
-          {showAnswer ? "答えを隠す" : "答えを見る"}
-        </button>
+      {problem.explanation.trim().length > 0 && (
+        <div className="mt-4">
+          <button
+            onClick={() => setShowAnswer((v) => !v)}
+            className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-300"
+          >
+            {showAnswer ? "答えを隠す" : "答えを見る"}
+          </button>
 
-        {showAnswer && (
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-            {problem.explanation}
-          </div>
-        )}
-      </div>
+          {showAnswer && (
+            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+              {problem.explanation}
+            </div>
+          )}
+        </div>
+      )}
 
       {problem.quiz && (
         <div className="mt-8">

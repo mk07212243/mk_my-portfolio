@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
 import type { Category, Language } from "../data/problems";
-import { levelInfo, problems, topicLabels } from "../data/problems";
+import { levelInfo, topicLabels } from "../data/problems";
+import { useAllProblems } from "../hooks/useAllProblems";
 import { useGeneratedProblems } from "../hooks/useGeneratedProblems";
 import { useProgress } from "../hooks/useProgress";
 import { buildGenerateProblemPrompt } from "../lib/aiPrompts";
@@ -21,10 +22,13 @@ export function CategoryProblemList() {
     topicId?: string;
   }>();
   const { progress } = useProgress();
-  const { generated, addProblem } = useGeneratedProblems();
+  const { addProblem } = useGeneratedProblems();
+  const allProblems = useAllProblems();
+
+  const isStock = level === undefined && topicId === undefined;
 
   const filtered = useMemo(() => {
-    return [...problems, ...generated].filter((p) => {
+    return allProblems.filter((p) => {
       if (p.language !== language) return false;
       if (level !== undefined) {
         return p.category.kind === "level" && p.category.level === Number(level);
@@ -32,14 +36,16 @@ export function CategoryProblemList() {
       if (topicId !== undefined) {
         return p.category.kind === "topic" && p.category.topicId === topicId;
       }
-      return false;
+      return p.category.kind === "stock";
     });
-  }, [generated, language, level, topicId]);
+  }, [allProblems, language, level, topicId]);
 
   const heading =
     level !== undefined
       ? `Lv${level} ${levelInfo[Number(level)]?.label ?? ""}`
-      : (topicLabels[topicId ?? ""] ?? topicId);
+      : topicId !== undefined
+        ? (topicLabels[topicId] ?? topicId)
+        : "自分のコード";
 
   if (!language) {
     return (
@@ -63,27 +69,36 @@ export function CategoryProblemList() {
       </h1>
 
       <div className="mt-4">
-        <AiCopyPastePanel
-          toggleLabel="AIで新しい問題を生成する"
-          successMessage="問題を追加しました"
-          prompt={buildGenerateProblemPrompt(language, heading ?? "")}
-          onSubmit={(text) => {
-            const result = parseGeneratedProblem(text);
-            if (!result.ok) return { ok: false, error: result.error };
-            const category: Category =
-              level !== undefined
-                ? { kind: "level", level: Number(level) }
-                : { kind: "topic", topicId: topicId ?? "" };
-            addProblem({
-              id: `generated-${crypto.randomUUID()}`,
-              language,
-              category,
-              isGenerated: true,
-              ...result.value,
-            });
-            return { ok: true };
-          }}
-        />
+        {isStock ? (
+          <Link
+            to="/import"
+            className="inline-block rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500"
+          >
+            ＋ 新しいコードを登録する
+          </Link>
+        ) : (
+          <AiCopyPastePanel
+            toggleLabel="AIで新しい問題を生成する"
+            successMessage="問題を追加しました"
+            prompt={buildGenerateProblemPrompt(language, heading ?? "")}
+            onSubmit={(text) => {
+              const result = parseGeneratedProblem(text);
+              if (!result.ok) return { ok: false, error: result.error };
+              const category: Category =
+                level !== undefined
+                  ? { kind: "level", level: Number(level) }
+                  : { kind: "topic", topicId: topicId ?? "" };
+              addProblem({
+                id: `generated-${crypto.randomUUID()}`,
+                language,
+                category,
+                isGenerated: true,
+                ...result.value,
+              });
+              return { ok: true };
+            }}
+          />
+        )}
       </div>
 
       <ul className="mt-6 flex flex-col gap-3">
@@ -100,6 +115,11 @@ export function CategoryProblemList() {
                   {problem.isGenerated && (
                     <span className="whitespace-nowrap rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
                       AI生成
+                    </span>
+                  )}
+                  {problem.isImported && (
+                    <span className="whitespace-nowrap rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+                      マイコード
                     </span>
                   )}
                 </div>
