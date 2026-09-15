@@ -2,12 +2,53 @@ import type { Quiz } from "../data/problems";
 
 type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
-const PARSE_ERROR = "JSONとして読み取れませんでした。AIの回答をそのまま貼り付けているか確認してください。";
+const PARSE_ERROR =
+  "JSONとして読み取れませんでした。文字列の中で二重引用符(\")がそのまま使われている可能性があります。AIに「JSON文字列の値の中では二重引用符を使わず、有効なJSONのみを出力して」と伝えて、もう一度試してみてください。";
+
+// AIの回答が整形されて文字列値の中に生の改行が入っていることがあるため、
+// 文字列リテラルの内側にある生の改行・タブなどの制御文字だけをエスケープしてから読み込む。
+function escapeRawControlCharsInStrings(text: string): string {
+  let result = "";
+  let inString = false;
+  let escapedNext = false;
+
+  for (const ch of text) {
+    if (inString) {
+      if (escapedNext) {
+        result += ch;
+        escapedNext = false;
+      } else if (ch === "\\") {
+        result += ch;
+        escapedNext = true;
+      } else if (ch === '"') {
+        result += ch;
+        inString = false;
+      } else if (ch === "\n") {
+        result += "\\n";
+      } else if (ch === "\r") {
+        result += "\\r";
+      } else if (ch === "\t") {
+        result += "\\t";
+      } else {
+        result += ch;
+      }
+    } else {
+      if (ch === '"') inString = true;
+      result += ch;
+    }
+  }
+
+  return result;
+}
 
 function extractJson(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const raw = fenced ? fenced[1] : text;
-  return JSON.parse(raw.trim());
+  const raw = (fenced ? fenced[1] : text).trim();
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return JSON.parse(escapeRawControlCharsInStrings(raw));
+  }
 }
 
 function isQuiz(value: unknown): value is Quiz {
