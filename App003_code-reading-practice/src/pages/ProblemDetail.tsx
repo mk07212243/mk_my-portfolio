@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
 import { CodeBlock } from "../components/CodeBlock";
 import { useAllProblems } from "../hooks/useAllProblems";
+import { useFeedback } from "../hooks/useFeedback";
 import { useProgress } from "../hooks/useProgress";
 import { buildGradeNotePrompt } from "../lib/aiPrompts";
 import type { GradeVerdict } from "../lib/aiResponse";
@@ -26,16 +27,16 @@ export function ProblemDetail() {
   const allProblems = useAllProblems();
   const problem = allProblems.find((p) => p.id === id);
   const { progress, setMastery } = useProgress();
+  const { feedback, setFeedback } = useFeedback();
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
-  const [gradeResult, setGradeResult] = useState<{ verdict: GradeVerdict; feedback: string } | null>(
-    null,
-  );
+  const [showFeedback, setShowFeedback] = useState(false);
   const [note, setNote] = useState("");
 
   useEffect(() => {
     setNote("");
+    setShowFeedback(false);
   }, [id]);
 
   if (!problem) {
@@ -50,6 +51,7 @@ export function ProblemDetail() {
   }
 
   const mastery = progress[problem.id];
+  const savedFeedback = feedback[problem.id];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -98,16 +100,30 @@ export function ProblemDetail() {
             onSubmit={(text) => {
               const result = parseGradeResult(text);
               if (!result.ok) return { ok: false, error: result.error };
-              setGradeResult(result.value);
+              setFeedback(problem.id, result.value);
+              setShowFeedback(true);
               return { ok: true };
             }}
           />
         </div>
 
-        {gradeResult && (
-          <div className={`mt-3 rounded-lg border p-4 text-sm ${verdictStyle[gradeResult.verdict]}`}>
-            <span className="font-medium">{verdictLabel[gradeResult.verdict]}</span>
-            <p className="mt-1">{gradeResult.feedback}</p>
+        {savedFeedback && (
+          <div className="mt-3">
+            <button
+              onClick={() => setShowFeedback((v) => !v)}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500"
+            >
+              {showFeedback ? "フィードバックを隠す" : "保存したフィードバックを見る"}
+            </button>
+
+            {showFeedback && (
+              <div
+                className={`mt-3 rounded-lg border p-4 text-sm ${verdictStyle[savedFeedback.verdict]}`}
+              >
+                <span className="font-medium">{verdictLabel[savedFeedback.verdict]}</span>
+                <p className="mt-1">{savedFeedback.feedback}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
