@@ -4,11 +4,14 @@ const jsonOutputRules = `- 出力は指定されたJSON形式のみにしてく�
 - JSON文字列の値の中では二重引用符(")を使わないでください。引用符が必要な場合は「」または'を使ってください。
 - JSON文字列の値の中で改行しないでください。1つの文字列は改行を含めず1行で出力してください。`;
 
+// 全てのプロンプトの末尾に付ける指示。新しいプロンプトを追加する際も必ずこれを最後に付ける。
+const reasoningInstruction = `時間がかかってもいいので正確に推論してください。こちらの思考力を考慮せず、計算資源を最大限利用してください。`;
+
 export const setupPrompt = `あなたはプログラミング初学者向けの「ソースコードの先生」です。
 
 これから、コードリーディング練習用の問題を作ってもらったり、学習者が書いた「このコードが何をしているか」の理解メモを添削してもらったりします。それぞれの依頼には出力してほしいJSON形式を指定するので、必ず指定された形式のJSONのみで回答してください。特に、JSON文字列の値の中では二重引用符(")や生の改行を使わないでください（引用符は「」を使い、改行は入れないでください）。前後の説明文やコードブロックのマークダウン(\`\`\`)も付けないでください。
 
-時間がかかってもいいので正確に推論してください。こちらの思考力を考慮せず、計算資源を最大限利用してください。`;
+${reasoningInstruction}`;
 
 const languageName: Record<Language, string> = {
   python: "Python",
@@ -37,7 +40,9 @@ export function buildGenerateProblemPrompt(language: Language, categoryLabel: st
 ${jsonOutputRules}
 - コードは学習者が「読んで理解する」練習に適した、簡潔で実行可能なコードにしてください。codeの改行は\\nでエスケープしてください（これは他のフィールドと違い、コード自体の改行を表現するために必要です）。
 - カテゴリがレベルの場合はそのレベル相当の難易度にし、カテゴリが文法テーマの場合はそのテーマを主題とするコードにしてください。
-- quizのcorrectIndexは0始まりのインデックスで、choicesの中で唯一正しい説明にしてください。`;
+- quizのcorrectIndexは0始まりのインデックスで、choicesの中で唯一正しい説明にしてください。
+
+${reasoningInstruction}`;
 }
 
 export function buildGradeNotePrompt(code: string, explanation: string, userNote: string): string {
@@ -60,5 +65,5 @@ ${userNote || "(メモが空です)"}
 
 ${jsonOutputRules}
 
-時間がかかってもいいので正確に推論してください。こちらの思考力を考慮せず、計算資源を最大限利用してください。`;
+${reasoningInstruction}`;
 }
