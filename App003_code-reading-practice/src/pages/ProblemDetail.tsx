@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
+import { AutoGrowTextarea } from "../components/AutoGrowTextarea";
 import { CodeBlock } from "../components/CodeBlock";
 import { useAllProblems } from "../hooks/useAllProblems";
 import { useFeedback } from "../hooks/useFeedback";
+import { usePersonalMemo } from "../hooks/usePersonalMemo";
 import { useProgress } from "../hooks/useProgress";
 import { buildGradeNotePrompt } from "../lib/aiPrompts";
 import { parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
@@ -15,6 +17,7 @@ export function ProblemDetail() {
   const problem = allProblems.find((p) => p.id === id);
   const { progress, setMastery } = useProgress();
   const { feedback, setFeedback } = useFeedback();
+  const { memos, setMemo } = usePersonalMemo();
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -39,6 +42,7 @@ export function ProblemDetail() {
 
   const mastery = progress[problem.id];
   const savedFeedback = feedback[problem.id];
+  const personalMemo = memos[problem.id] ?? "";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -71,12 +75,12 @@ export function ProblemDetail() {
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
           このコードは何をしていると思いますか?（このメモは保存されません。ページを離れると消えます）
         </label>
-        <textarea
+        <AutoGrowTextarea
           className="mt-2 w-full rounded-lg border border-slate-300 p-3 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           rows={4}
           placeholder="自分の言葉で説明してみましょう..."
           value={note}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={setNote}
         />
 
         <div className="mt-2">
@@ -204,6 +208,19 @@ export function ProblemDetail() {
             )}
           </div>
         )}
+
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            自分用メモ（保存されます）
+          </label>
+          <AutoGrowTextarea
+            className="mt-2 w-full rounded-lg border border-slate-300 p-3 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            rows={3}
+            placeholder="フィードバックを踏まえて、自分用に気づいたことを書いておきましょう..."
+            value={personalMemo}
+            onChange={(text) => setMemo(problem.id, text)}
+          />
+        </div>
       </div>
     </div>
   );
