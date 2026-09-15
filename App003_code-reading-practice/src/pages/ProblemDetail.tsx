@@ -106,26 +106,6 @@ export function ProblemDetail() {
             }}
           />
         </div>
-
-        {savedFeedback && (
-          <div className="mt-3">
-            <button
-              onClick={() => setShowFeedback((v) => !v)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500"
-            >
-              {showFeedback ? "フィードバックを隠す" : "保存したフィードバックを見る"}
-            </button>
-
-            {showFeedback && (
-              <div
-                className={`mt-3 rounded-lg border p-4 text-sm ${verdictStyle[savedFeedback.verdict]}`}
-              >
-                <span className="font-medium">{verdictLabel[savedFeedback.verdict]}</span>
-                <p className="mt-1">{savedFeedback.feedback}</p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {problem.explanation.trim().length > 0 && (
@@ -183,9 +163,18 @@ export function ProblemDetail() {
       )}
 
       <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          自己評価
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            自己評価
+          </p>
+          {savedFeedback && (
+            <span
+              className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium ${verdictStyle[savedFeedback.verdict]}`}
+            >
+              前回: {verdictLabel[savedFeedback.verdict]}
+            </span>
+          )}
+        </div>
         <div className="mt-2 flex gap-2">
           <button
             onClick={() => setMastery(problem.id, "understood")}
@@ -208,6 +197,26 @@ export function ProblemDetail() {
             まだ不安
           </button>
         </div>
+
+        {savedFeedback && (
+          <div className="mt-4">
+            <button
+              onClick={() => setShowFeedback((v) => !v)}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500"
+            >
+              {showFeedback ? "フィードバックを隠す" : "保存したフィードバックを見る"}
+            </button>
+
+            {showFeedback && (
+              <div
+                className={`mt-3 rounded-lg border p-4 text-sm ${verdictStyle[savedFeedback.verdict]}`}
+              >
+                <span className="font-medium">{verdictLabel[savedFeedback.verdict]}</span>
+                <p className="mt-1">{savedFeedback.feedback}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
