@@ -7,6 +7,7 @@ import { useAllProblems } from "../hooks/useAllProblems";
 import { useFeedback } from "../hooks/useFeedback";
 import { usePersonalMemo } from "../hooks/usePersonalMemo";
 import { useProgress } from "../hooks/useProgress";
+import { useSolvedAt } from "../hooks/useSolvedAt";
 import { buildGradeNotePrompt } from "../lib/aiPrompts";
 import { parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
 
@@ -18,6 +19,7 @@ export function ProblemDetail() {
   const { progress, setMastery } = useProgress();
   const { feedback, setFeedback } = useFeedback();
   const { memos, setMemo } = usePersonalMemo();
+  const { markSolved } = useSolvedAt();
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -93,6 +95,7 @@ export function ProblemDetail() {
               if (!result.ok) return { ok: false, error: result.error };
               setFeedback(problem.id, result.value);
               setShowFeedback(true);
+              markSolved(problem.id);
               return { ok: true };
             }}
           />
@@ -168,7 +171,10 @@ export function ProblemDetail() {
         </div>
         <div className="mt-2 flex gap-2">
           <button
-            onClick={() => setMastery(problem.id, "understood")}
+            onClick={() => {
+              setMastery(problem.id, "understood");
+              markSolved(problem.id);
+            }}
             className={`rounded-lg px-4 py-2 text-sm font-medium ${
               mastery === "understood"
                 ? "bg-emerald-600 text-white"
@@ -178,7 +184,10 @@ export function ProblemDetail() {
             理解できた
           </button>
           <button
-            onClick={() => setMastery(problem.id, "unsure")}
+            onClick={() => {
+              setMastery(problem.id, "unsure");
+              markSolved(problem.id);
+            }}
             className={`rounded-lg px-4 py-2 text-sm font-medium ${
               mastery === "unsure"
                 ? "bg-amber-600 text-white"

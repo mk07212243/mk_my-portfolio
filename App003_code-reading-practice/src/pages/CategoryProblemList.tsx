@@ -1,12 +1,15 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
-import type { Category, Language } from "../data/problems";
+import type { Category, Language, Problem } from "../data/problems";
 import { levelInfo, topicLabels } from "../data/problems";
 import { useAllProblems } from "../hooks/useAllProblems";
+import type { GradeVerdict } from "../lib/aiResponse";
 import { useFeedback } from "../hooks/useFeedback";
 import { useGeneratedProblems } from "../hooks/useGeneratedProblems";
+import type { Mastery } from "../hooks/useProgress";
 import { useProgress } from "../hooks/useProgress";
+import { useSolvedAt } from "../hooks/useSolvedAt";
 import { buildGenerateProblemPrompt } from "../lib/aiPrompts";
 import { parseGeneratedProblem, verdictLabel, verdictStyle } from "../lib/aiResponse";
 
@@ -16,6 +19,23 @@ const languageLabel: Record<Language, string> = {
   javascript: "JavaScript",
 };
 
+function formatSolvedAt(ts: number): string {
+  return new Date(ts).toLocaleString("ja-JP", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// 状態の優先度。数字が小さいほど「要復習」で、一覧の上に来る。
+function severity(mastery: Mastery | undefined, verdict: GradeVerdict | undefined): number {
+  if (mastery === "unsure" || verdict === "incorrect") return 0;
+  if (verdict === "partial") return 1;
+  return 2;
+}
+
 export function CategoryProblemList() {
   const { language, level, topicId } = useParams<{
     language: Language;
@@ -24,6 +44,7 @@ export function CategoryProblemList() {
   }>();
   const { progress } = useProgress();
   const { feedback } = useFeedback();
+  const { solvedAt } = useSolvedAt();
   const { addProblem } = useGeneratedProblems();
   const allProblems = useAllProblems();
 
@@ -41,6 +62,35 @@ export function CategoryProblemList() {
       return p.category.kind === "stock";
     });
   }, [allProblems, language, level, topicId]);
+
+  // 表示順(状態優先)とは別に、生成順に基づく問題番号を先に確定させておく。
+  const numbered = useMemo(
+    () => filtered.map((problem, i) => ({ problem, num: i + 1 })),
+    [filtered],
+  );
+
+  const sorted = useMemo(() => {
+    return [...numbered].sort((a, b) => {
+      const aMastery = progress[a.problem.id];
+      const bMastery = progress[b.problem.id];
+      const aVerdict = feedback[a.problem.id]?.verdict;
+      const bVerdict = feedback[b.problem.id]?.verdict;
+      const aAttempted = aMastery !== undefined || aVerdict !== undefined;
+      const bAttempted = bMastery !== undefined || bVerdict !== undefined;
+
+      // 第0キー: 未挑戦を最優先で上に
+      if (aAttempted !== bAttempted) return aAttempted ? 1 : -1;
+
+      // 第1キー: 状態(要復習系が上)
+      if (aAttempted && bAttempted) {
+        const diff = severity(aMastery, aVerdict) - severity(bMastery, bVerdict);
+        if (diff !== 0) return diff;
+      }
+
+      // 第2キー: 問題番号(生成順)
+      return a.num - b.num;
+    });
+  }, [numbered, progress, feedback]);
 
   const heading =
     level !== undefined
@@ -104,26 +154,34 @@ export function CategoryProblemList() {
       </div>
 
       <ul className="mt-6 flex flex-col gap-3">
-        {filtered.map((problem) => {
+        {sorted.map(({ problem, num }: { problem: Problem; num: number }) => {
           const mastery = progress[problem.id];
           const savedFeedback = feedback[problem.id];
+          const solvedTs = solvedAt[problem.id];
           return (
             <li key={problem.id}>
               <Link
                 to={`/problems/${problem.id}`}
                 className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 px-4 py-3 transition hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500"
               >
-                <div className="flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
-                  {problem.title}
-                  {problem.isGenerated && (
-                    <span className="whitespace-nowrap rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
-                      AI生成
-                    </span>
-                  )}
-                  {problem.isImported && (
-                    <span className="whitespace-nowrap rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
-                      マイコード
-                    </span>
+                <div>
+                  <div className="flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
+                    問題 #{num}
+                    {problem.isGenerated && (
+                      <span className="whitespace-nowrap rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                        AI生成
+                      </span>
+                    )}
+                    {problem.isImported && (
+                      <span className="whitespace-nowrap rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+                        マイコード
+                      </span>
+                    )}
+                  </div>
+                  {solvedTs && (
+                    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                      最終解答: {formatSolvedAt(solvedTs)}
+                    </p>
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -150,7 +208,7 @@ export function CategoryProblemList() {
             </li>
           );
         })}
-        {filtered.length === 0 && (
+        {sorted.length === 0 && (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             該当する問題がありません。
           </p>
