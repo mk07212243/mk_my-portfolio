@@ -12,6 +12,7 @@ import { useProgress } from "../hooks/useProgress";
 import { useSolvedAt } from "../hooks/useSolvedAt";
 import { buildGenerateProblemPrompt } from "../lib/aiPrompts";
 import { parseGeneratedProblem, verdictLabel, verdictStyle } from "../lib/aiResponse";
+import { getProblemNumber } from "../lib/problemNumbering";
 
 const languageLabel: Record<Language, string> = {
   python: "Python",
@@ -64,9 +65,10 @@ export function CategoryProblemList() {
   }, [allProblems, language, level, topicId]);
 
   // 表示順(状態優先)とは別に、生成順に基づく問題番号を先に確定させておく。
+  // 詳細画面(ProblemDetail)でも同じ番号になるよう、getProblemNumberを共通利用する。
   const numbered = useMemo(
-    () => filtered.map((problem, i) => ({ problem, num: i + 1 })),
-    [filtered],
+    () => filtered.map((problem) => ({ problem, num: getProblemNumber(allProblems, problem) })),
+    [filtered, allProblems],
   );
 
   const sorted = useMemo(() => {

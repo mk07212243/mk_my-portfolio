@@ -10,6 +10,7 @@ import { useProgress } from "../hooks/useProgress";
 import { useSolvedAt } from "../hooks/useSolvedAt";
 import { buildGradeNotePrompt } from "../lib/aiPrompts";
 import { parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
+import { getProblemNumber } from "../lib/problemNumbering";
 
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +47,7 @@ export function ProblemDetail() {
   const mastery = progress[problem.id];
   const savedFeedback = feedback[problem.id];
   const personalMemo = memos[problem.id] ?? "";
+  const problemNumber = getProblemNumber(allProblems, problem);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -57,7 +59,7 @@ export function ProblemDetail() {
       </button>
 
       <h1 className="mt-3 flex items-center gap-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">
-        {problem.title}
+        問題 #{problemNumber}
         {problem.isGenerated && (
           <span className="whitespace-nowrap rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
             AI生成
@@ -226,7 +228,7 @@ export function ProblemDetail() {
             </label>
             <button
               onClick={() => setShowMemo((v) => !v)}
-              className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500"
             >
               {showMemo ? "隠す" : "表示する"}
             </button>
