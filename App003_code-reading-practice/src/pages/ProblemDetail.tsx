@@ -6,20 +6,7 @@ import { useAllProblems } from "../hooks/useAllProblems";
 import { useFeedback } from "../hooks/useFeedback";
 import { useProgress } from "../hooks/useProgress";
 import { buildGradeNotePrompt } from "../lib/aiPrompts";
-import type { GradeVerdict } from "../lib/aiResponse";
-import { parseGradeResult } from "../lib/aiResponse";
-
-const verdictLabel: Record<GradeVerdict, string> = {
-  correct: "正解",
-  partial: "おおむね正解",
-  incorrect: "要復習",
-};
-
-const verdictStyle: Record<GradeVerdict, string> = {
-  correct: "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
-  partial: "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
-  incorrect: "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
-};
+import { parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
 
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();

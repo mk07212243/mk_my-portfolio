@@ -99,6 +99,22 @@ export function parseGeneratedProblem(
 
 export type GradeVerdict = "correct" | "partial" | "incorrect";
 
+export const verdictLabel: Record<GradeVerdict, string> = {
+  correct: "正解",
+  partial: "おおむね正解",
+  incorrect: "要復習",
+};
+
+// バッジ・カード共通のスタイル。ボーダー・背景・文字色をまとめて持つ。
+export const verdictStyle: Record<GradeVerdict, string> = {
+  correct:
+    "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  partial:
+    "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  incorrect:
+    "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
+};
+
 export function parseGradeResult(text: string): ParseResult<{ verdict: GradeVerdict; feedback: string }> {
   let data: unknown;
   try {

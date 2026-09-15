@@ -4,10 +4,11 @@ import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
 import type { Category, Language } from "../data/problems";
 import { levelInfo, topicLabels } from "../data/problems";
 import { useAllProblems } from "../hooks/useAllProblems";
+import { useFeedback } from "../hooks/useFeedback";
 import { useGeneratedProblems } from "../hooks/useGeneratedProblems";
 import { useProgress } from "../hooks/useProgress";
 import { buildGenerateProblemPrompt } from "../lib/aiPrompts";
-import { parseGeneratedProblem } from "../lib/aiResponse";
+import { parseGeneratedProblem, verdictLabel, verdictStyle } from "../lib/aiResponse";
 
 const languageLabel: Record<Language, string> = {
   python: "Python",
@@ -22,6 +23,7 @@ export function CategoryProblemList() {
     topicId?: string;
   }>();
   const { progress } = useProgress();
+  const { feedback } = useFeedback();
   const { addProblem } = useGeneratedProblems();
   const allProblems = useAllProblems();
 
@@ -104,6 +106,7 @@ export function CategoryProblemList() {
       <ul className="mt-6 flex flex-col gap-3">
         {filtered.map((problem) => {
           const mastery = progress[problem.id];
+          const savedFeedback = feedback[problem.id];
           return (
             <li key={problem.id}>
               <Link
@@ -123,17 +126,26 @@ export function CategoryProblemList() {
                     </span>
                   )}
                 </div>
-                {mastery && (
-                  <span
-                    className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
-                      mastery === "understood"
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                    }`}
-                  >
-                    {mastery === "understood" ? "理解済み" : "要復習"}
-                  </span>
-                )}
+                <div className="flex shrink-0 items-center gap-2">
+                  {mastery && (
+                    <span
+                      className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
+                        mastery === "understood"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                      }`}
+                    >
+                      {mastery === "understood" ? "理解済み" : "要復習"}
+                    </span>
+                  )}
+                  {savedFeedback && (
+                    <span
+                      className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium ${verdictStyle[savedFeedback.verdict]}`}
+                    >
+                      前回: {verdictLabel[savedFeedback.verdict]}
+                    </span>
+                  )}
+                </div>
               </Link>
             </li>
           );
