@@ -76,8 +76,14 @@ export function AiCopyPastePanel({
       <textarea
         value={pasted}
         onChange={(e) => setPasted(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (pasted.trim().length > 0) handleSubmit();
+          }
+        }}
         rows={6}
-        placeholder="AIの回答(JSON)をここに貼り付けてください"
+        placeholder="AIの回答(JSON)をここに貼り付けてください（Enterで反映、Shift+Enterで改行）"
         className="mt-2 w-full rounded-lg border border-slate-300 p-2 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       />
 
