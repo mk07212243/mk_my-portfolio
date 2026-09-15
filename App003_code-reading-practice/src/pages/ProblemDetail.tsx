@@ -24,6 +24,7 @@ export function ProblemDetail() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showMemo, setShowMemo] = useState(true);
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -219,16 +220,26 @@ export function ProblemDetail() {
         )}
 
         <div className="mt-4">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            自分用メモ（保存されます）
-          </label>
-          <AutoGrowTextarea
-            className="mt-2 w-full rounded-lg border border-slate-300 p-3 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            rows={3}
-            placeholder="フィードバックを踏まえて、自分用に気づいたことを書いておきましょう..."
-            value={personalMemo}
-            onChange={(text) => setMemo(problem.id, text)}
-          />
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              自分用メモ（保存されます）
+            </label>
+            <button
+              onClick={() => setShowMemo((v) => !v)}
+              className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            >
+              {showMemo ? "隠す" : "表示する"}
+            </button>
+          </div>
+          {showMemo && (
+            <AutoGrowTextarea
+              className="mt-2 w-full rounded-lg border border-slate-300 p-3 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              rows={3}
+              placeholder="フィードバックを踏まえて、自分用に気づいたことを書いておきましょう..."
+              value={personalMemo}
+              onChange={(text) => setMemo(problem.id, text)}
+            />
+          )}
         </div>
       </div>
     </div>
