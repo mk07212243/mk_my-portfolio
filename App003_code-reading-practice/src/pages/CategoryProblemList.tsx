@@ -6,7 +6,6 @@ import { levelInfo, topicLabels } from "../data/problems";
 import { useAllProblems } from "../hooks/useAllProblems";
 import type { GradeVerdict } from "../lib/aiResponse";
 import { useFeedback } from "../hooks/useFeedback";
-import { useGeneratedProblems } from "../hooks/useGeneratedProblems";
 import type { Mastery } from "../hooks/useProgress";
 import { useProgress } from "../hooks/useProgress";
 import { useSolvedAt } from "../hooks/useSolvedAt";
@@ -46,8 +45,7 @@ export function CategoryProblemList() {
   const { progress } = useProgress();
   const { feedback } = useFeedback();
   const { solvedAt } = useSolvedAt();
-  const { addProblem } = useGeneratedProblems();
-  const allProblems = useAllProblems();
+  const { allProblems, addGeneratedProblem } = useAllProblems();
 
   const isStock = level === undefined && topicId === undefined;
 
@@ -142,11 +140,12 @@ export function CategoryProblemList() {
                 level !== undefined
                   ? { kind: "level", level: Number(level) }
                   : { kind: "topic", topicId: topicId ?? "" };
-              addProblem({
+              addGeneratedProblem({
                 id: `generated-${crypto.randomUUID()}`,
                 language,
                 category,
                 isGenerated: true,
+                explanation: "",
                 ...result.value,
               });
               return { ok: true };

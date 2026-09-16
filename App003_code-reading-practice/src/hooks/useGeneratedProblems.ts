@@ -23,5 +23,9 @@ export function useGeneratedProblems() {
     setGenerated((prev) => [...prev, problem]);
   }, []);
 
-  return { generated, addProblem };
+  const updateProblem = useCallback((id: string, patch: Partial<Problem>) => {
+    setGenerated((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }, []);
+
+  return { generated, addProblem, updateProblem };
 }

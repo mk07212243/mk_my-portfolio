@@ -19,16 +19,41 @@ const languageName: Record<Language, string> = {
   javascript: "JavaScript",
 };
 
+// コードと解説を同時に生成すると、生成直後にAIの回答(チャット上の生テキスト)を
+// 目にした時点で答えが見えてしまう(コピーする都合上、隠しようがない)。
+// そのため生成は2段階に分け、まずコードとタイトルだけを作ってもらう。
+// 解説・クイズは、学習者がコードを読み終えたあとに buildExplainProblemPrompt で別途生成する。
 export function buildGenerateProblemPrompt(language: Language, categoryLabel: string): string {
-  return `あなたはプログラミング学習教材の作成者です。以下の条件に合う、コードリーディング練習用の問題を1つ作成してください。
+  return `あなたはプログラミング学習教材の作成者です。以下の条件に合う、コードリーディング練習用の問題のコードを1つ作成してください。
 
 言語: ${languageName[language]}
 カテゴリ: ${categoryLabel}
 
 出力形式:
 {
-  "title": "問題の短いタイトル(日本語)",
-  "code": "実際のコード(文字列。改行は\\nを使う)",
+  "title": "問題の短いタイトル(日本語)。答えや処理内容を明かさない、内容が推測できない中立的なタイトルにしてください",
+  "code": "実際のコード(文字列。改行は\\nを使う)"
+}
+
+${jsonOutputRules}
+- コードは学習者が「読んで理解する」練習に適した、簡潔で実行可能なコードにしてください。codeの改行は\\nでエスケープしてください（これは他のフィールドと違い、コード自体の改行を表現するために必要です）。
+- カテゴリがレベルの場合はそのレベル相当の難易度にし、カテゴリが文法テーマの場合はそのテーマを主題とするコードにしてください。
+- 解説やクイズはこの時点では出力しないでください（コードとタイトルのみ）。
+
+${reasoningInstruction}`;
+}
+
+// 上のプロンプトでコード確定後、学習者が自分でコードを読み終えたタイミングで使う。
+export function buildExplainProblemPrompt(code: string, categoryLabel: string): string {
+  return `あなたはプログラミング学習教材の作成者です。以下のコードリーディング練習用のコードについて、解説と理解度チェック用のクイズを作成してください。
+
+カテゴリ: ${categoryLabel}
+
+コード:
+${code}
+
+出力形式:
+{
   "explanation": "このコードが何をしているかの日本語解説(2〜4文程度)",
   "quiz": {
     "question": "このコードの理解を問う4択クイズの質問文",
@@ -38,8 +63,6 @@ export function buildGenerateProblemPrompt(language: Language, categoryLabel: st
 }
 
 ${jsonOutputRules}
-- コードは学習者が「読んで理解する」練習に適した、簡潔で実行可能なコードにしてください。codeの改行は\\nでエスケープしてください（これは他のフィールドと違い、コード自体の改行を表現するために必要です）。
-- カテゴリがレベルの場合はそのレベル相当の難易度にし、カテゴリが文法テーマの場合はそのテーマを主題とするコードにしてください。
 - quizのcorrectIndexは0始まりのインデックスで、choicesの中で唯一正しい説明にしてください。
 
 ${reasoningInstruction}`;
@@ -52,7 +75,7 @@ export function buildGradeNotePrompt(code: string, explanation: string, userNote
 ${code}
 
 模範解説:
-${explanation}
+${explanation || "（まだ模範解説は用意されていません。コード自体から判断してください）"}
 
 学習者のメモ:
 ${userNote || "(メモが空です)"}

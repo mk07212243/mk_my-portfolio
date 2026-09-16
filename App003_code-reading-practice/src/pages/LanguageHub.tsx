@@ -12,7 +12,7 @@ const languageLabel: Record<Language, string> = {
 
 export function LanguageHub() {
   const { language } = useParams<{ language: Language }>();
-  const allProblems = useAllProblems();
+  const { allProblems } = useAllProblems();
 
   const languageProblems = useMemo(
     () => allProblems.filter((p) => p.language === language),

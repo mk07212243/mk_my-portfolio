@@ -3,19 +3,20 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
 import { AutoGrowTextarea } from "../components/AutoGrowTextarea";
 import { CodeBlock } from "../components/CodeBlock";
+import { levelInfo, topicLabels } from "../data/problems";
 import { useAllProblems } from "../hooks/useAllProblems";
 import { useFeedback } from "../hooks/useFeedback";
 import { usePersonalMemo } from "../hooks/usePersonalMemo";
 import { useProgress } from "../hooks/useProgress";
 import { useSolvedAt } from "../hooks/useSolvedAt";
-import { buildGradeNotePrompt } from "../lib/aiPrompts";
-import { parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
+import { buildExplainProblemPrompt, buildGradeNotePrompt } from "../lib/aiPrompts";
+import { parseExplanationResult, parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
 import { getProblemNumber } from "../lib/problemNumbering";
 
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const allProblems = useAllProblems();
+  const { allProblems, updateGeneratedProblem } = useAllProblems();
   const problem = allProblems.find((p) => p.id === id);
   const { progress, setMastery } = useProgress();
   const { feedback, setFeedback } = useFeedback();
@@ -48,6 +49,12 @@ export function ProblemDetail() {
   const savedFeedback = feedback[problem.id];
   const personalMemo = memos[problem.id] ?? "";
   const problemNumber = getProblemNumber(allProblems, problem);
+  const categoryLabel =
+    problem.category.kind === "level"
+      ? `Lv${problem.category.level} ${levelInfo[problem.category.level]?.label ?? ""}`
+      : problem.category.kind === "topic"
+        ? (topicLabels[problem.category.topicId] ?? problem.category.topicId)
+        : "自分のコード";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -105,7 +112,7 @@ export function ProblemDetail() {
         </div>
       </div>
 
-      {problem.explanation.trim().length > 0 && (
+      {problem.explanation.trim().length > 0 ? (
         <div className="mt-4">
           <button
             onClick={() => setShowAnswer((v) => !v)}
@@ -120,6 +127,25 @@ export function ProblemDetail() {
             </div>
           )}
         </div>
+      ) : (
+        problem.isGenerated && (
+          <div className="mt-4">
+            <AiCopyPastePanel
+              toggleLabel="AIに解説・クイズを生成してもらう"
+              successMessage="解説を追加しました"
+              prompt={buildExplainProblemPrompt(problem.code, categoryLabel)}
+              onSubmit={(text) => {
+                const result = parseExplanationResult(text);
+                if (!result.ok) return { ok: false, error: result.error };
+                updateGeneratedProblem(problem.id, {
+                  explanation: result.value.explanation,
+                  quiz: result.value.quiz,
+                });
+                return { ok: true };
+              }}
+            />
+          </div>
+        )
       )}
 
       {problem.quiz && (

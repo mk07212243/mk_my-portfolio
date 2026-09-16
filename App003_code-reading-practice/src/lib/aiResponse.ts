@@ -65,9 +65,7 @@ function isQuiz(value: unknown): value is Quiz {
   );
 }
 
-export function parseGeneratedProblem(
-  text: string,
-): ParseResult<{ title: string; code: string; explanation: string; quiz?: Quiz }> {
+export function parseGeneratedProblem(text: string): ParseResult<{ title: string; code: string }> {
   let data: unknown;
   try {
     data = extractJson(text);
@@ -79,8 +77,29 @@ export function parseGeneratedProblem(
     return { ok: false, error: PARSE_ERROR };
   }
   const d = data as Record<string, unknown>;
-  if (typeof d.title !== "string" || typeof d.code !== "string" || typeof d.explanation !== "string") {
-    return { ok: false, error: "title, code, explanation が正しい形式で含まれていません。" };
+  if (typeof d.title !== "string" || typeof d.code !== "string") {
+    return { ok: false, error: "title, code が正しい形式で含まれていません。" };
+  }
+
+  return { ok: true, value: { title: d.title, code: d.code } };
+}
+
+export function parseExplanationResult(
+  text: string,
+): ParseResult<{ explanation: string; quiz?: Quiz }> {
+  let data: unknown;
+  try {
+    data = extractJson(text);
+  } catch {
+    return { ok: false, error: PARSE_ERROR };
+  }
+
+  if (typeof data !== "object" || data === null) {
+    return { ok: false, error: PARSE_ERROR };
+  }
+  const d = data as Record<string, unknown>;
+  if (typeof d.explanation !== "string") {
+    return { ok: false, error: "explanation が正しい形式で含まれていません。" };
   }
   if (d.quiz !== undefined && !isQuiz(d.quiz)) {
     return { ok: false, error: "quiz の形式が正しくありません。" };
@@ -88,12 +107,7 @@ export function parseGeneratedProblem(
 
   return {
     ok: true,
-    value: {
-      title: d.title,
-      code: d.code,
-      explanation: d.explanation,
-      quiz: d.quiz as Quiz | undefined,
-    },
+    value: { explanation: d.explanation, quiz: d.quiz as Quiz | undefined },
   };
 }
 
