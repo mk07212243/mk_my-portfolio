@@ -25,12 +25,13 @@ export function ProblemDetail() {
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [showMemo, setShowMemo] = useState(true);
+  const [showMemo, setShowMemo] = useState(false);
   const [note, setNote] = useState("");
 
   useEffect(() => {
     setNote("");
     setShowFeedback(false);
+    setShowMemo(false);
   }, [id]);
 
   if (!problem) {
