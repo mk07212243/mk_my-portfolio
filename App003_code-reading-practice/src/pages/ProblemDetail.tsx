@@ -131,16 +131,13 @@ export function ProblemDetail() {
         problem.isGenerated && (
           <div className="mt-4">
             <AiCopyPastePanel
-              toggleLabel="AIに解説・クイズを生成してもらう"
+              toggleLabel="AIに解説を生成してもらう"
               successMessage="解説を追加しました"
               prompt={buildExplainProblemPrompt(problem.code, categoryLabel)}
               onSubmit={(text) => {
                 const result = parseExplanationResult(text);
                 if (!result.ok) return { ok: false, error: result.error };
-                updateGeneratedProblem(problem.id, {
-                  explanation: result.value.explanation,
-                  quiz: result.value.quiz,
-                });
+                updateGeneratedProblem(problem.id, { explanation: result.value.explanation });
                 return { ok: true };
               }}
             />

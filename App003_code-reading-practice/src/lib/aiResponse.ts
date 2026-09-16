@@ -1,5 +1,3 @@
-import type { Quiz } from "../data/problems";
-
 type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
 const PARSE_ERROR =
@@ -51,20 +49,6 @@ function extractJson(text: string): unknown {
   }
 }
 
-function isQuiz(value: unknown): value is Quiz {
-  if (typeof value !== "object" || value === null) return false;
-  const v = value as Record<string, unknown>;
-  return (
-    typeof v.question === "string" &&
-    Array.isArray(v.choices) &&
-    v.choices.length >= 2 &&
-    v.choices.every((c) => typeof c === "string") &&
-    typeof v.correctIndex === "number" &&
-    v.correctIndex >= 0 &&
-    v.correctIndex < v.choices.length
-  );
-}
-
 export function parseGeneratedProblem(text: string): ParseResult<{ title: string; code: string }> {
   let data: unknown;
   try {
@@ -84,9 +68,7 @@ export function parseGeneratedProblem(text: string): ParseResult<{ title: string
   return { ok: true, value: { title: d.title, code: d.code } };
 }
 
-export function parseExplanationResult(
-  text: string,
-): ParseResult<{ explanation: string; quiz?: Quiz }> {
+export function parseExplanationResult(text: string): ParseResult<{ explanation: string }> {
   let data: unknown;
   try {
     data = extractJson(text);
@@ -101,14 +83,8 @@ export function parseExplanationResult(
   if (typeof d.explanation !== "string") {
     return { ok: false, error: "explanation が正しい形式で含まれていません。" };
   }
-  if (d.quiz !== undefined && !isQuiz(d.quiz)) {
-    return { ok: false, error: "quiz の形式が正しくありません。" };
-  }
 
-  return {
-    ok: true,
-    value: { explanation: d.explanation, quiz: d.quiz as Quiz | undefined },
-  };
+  return { ok: true, value: { explanation: d.explanation } };
 }
 
 export type GradeVerdict = "correct" | "partial" | "incorrect";
