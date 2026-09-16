@@ -252,7 +252,7 @@ def slow_add(a, b):
 
 slow_add(2, 3)`,
     explanation:
-      "timer は、渡された関数を実行しつつ実行時間を計測して表示する「デコレータ」です。@timer を付けた slow_add は、呼び出すと本来の処理（0.1秒待って加算）に加え、実行後に何秒かかったかがコンソールに表示されます。functools.wraps は元の関数名などの情報を保つためのものです。",
+      "timer は、渡された関数を実行しつつ実行時間を計測して表示する「デコレータ」です。@timer を付けた slow_add は、呼び出すと本来の処理（0.1秒待って加算）に加え、実行後に何秒かかったかがコンソールに表示されます。よって slow_add(2, 3) の戻り値は 5 で、あわせて「slow_add took 0.10xxs」のような実行時間のログが出力されます。functools.wraps は元の関数名などの情報を保つためのものです。",
     quiz: {
       question: "slow_add(2, 3) を実行すると何が起こりますか?",
       choices: [
@@ -713,7 +713,7 @@ fetchUser(1)
   .then((posts) => console.log(posts))
   .catch((err) => console.error(err));`,
     explanation:
-      "ユーザー情報を取得してから、そのユーザーの投稿一覧を取得する、という2段階の非同期処理をPromiseチェーンでつないでいます。fetchUser の結果が fetchPosts に渡り、その結果が最後の then でログ出力されます。途中でエラーが起きれば catch にジャンプします。",
+      "ユーザー情報を取得してから、そのユーザーの投稿一覧を取得する、という2段階の非同期処理をPromiseチェーンでつないでいます。fetchUser(1) は { id: 1, name: \"Alice\" } を返し、それを受け取った fetchPosts が [\"Alice's post 1\", \"Alice's post 2\"] を返すので、最後の then でこの配列がログ出力されます。途中でエラーが起きれば catch にジャンプします。",
     quiz: {
       question: "このコードの処理の順序として正しいものは?",
       choices: [
