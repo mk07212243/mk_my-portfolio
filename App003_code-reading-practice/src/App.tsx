@@ -1,5 +1,6 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
 import { CategoryProblemList } from "./pages/CategoryProblemList";
+import { DataTransfer } from "./pages/DataTransfer";
 import { ImportCode } from "./pages/ImportCode";
 import { LanguageHub } from "./pages/LanguageHub";
 import { LanguageSelect } from "./pages/LanguageSelect";
@@ -7,11 +8,12 @@ import { ProblemDetail } from "./pages/ProblemDetail";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="min-h-screen bg-white dark:bg-slate-900">
         <Routes>
           <Route path="/" element={<LanguageSelect />} />
           <Route path="/import" element={<ImportCode />} />
+          <Route path="/data" element={<DataTransfer />} />
           <Route path="/languages/:language" element={<LanguageHub />} />
           <Route path="/languages/:language/level/:level" element={<CategoryProblemList />} />
           <Route path="/languages/:language/topic/:topicId" element={<CategoryProblemList />} />
@@ -19,6 +21,6 @@ export default function App() {
           <Route path="/problems/:id" element={<ProblemDetail />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

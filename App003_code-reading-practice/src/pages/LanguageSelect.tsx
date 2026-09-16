@@ -44,6 +44,15 @@ export function LanguageSelect() {
         </p>
       </div>
 
+      <div className="mt-6">
+        <Link
+          to="/data"
+          className="text-sm text-blue-600 hover:underline"
+        >
+          データのバックアップ・引き継ぎ
+        </Link>
+      </div>
+
       <div className="mt-10 border-t border-slate-200 pt-6 dark:border-slate-700">
         <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
           AIを使う準備（最初に1回だけ）
