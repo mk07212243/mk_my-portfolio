@@ -105,7 +105,9 @@ export const verdictStyle: Record<GradeVerdict, string> = {
     "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
 };
 
-export function parseGradeResult(text: string): ParseResult<{ verdict: GradeVerdict; feedback: string }> {
+export function parseGradeResult(
+  text: string,
+): ParseResult<{ verdict: GradeVerdict; feedback: string; explanation?: string }> {
   let data: unknown;
   try {
     data = extractJson(text);
@@ -123,6 +125,12 @@ export function parseGradeResult(text: string): ParseResult<{ verdict: GradeVerd
   ) {
     return { ok: false, error: "verdict, feedback が正しい形式で含まれていません。" };
   }
+  if (d.explanation !== undefined && typeof d.explanation !== "string") {
+    return { ok: false, error: "explanation の形式が正しくありません。" };
+  }
 
-  return { ok: true, value: { verdict: d.verdict, feedback: d.feedback } };
+  return {
+    ok: true,
+    value: { verdict: d.verdict, feedback: d.feedback, explanation: d.explanation as string | undefined },
+  };
 }

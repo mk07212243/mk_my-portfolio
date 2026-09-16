@@ -5,6 +5,7 @@ import { AutoGrowTextarea } from "../components/AutoGrowTextarea";
 import { CodeBlock } from "../components/CodeBlock";
 import { levelInfo, topicLabels } from "../data/problems";
 import { useAllProblems } from "../hooks/useAllProblems";
+import { useExplanationOverrides } from "../hooks/useExplanationOverrides";
 import { useFeedback } from "../hooks/useFeedback";
 import { usePersonalMemo } from "../hooks/usePersonalMemo";
 import { useProgress } from "../hooks/useProgress";
@@ -20,6 +21,7 @@ export function ProblemDetail() {
   const problem = allProblems.find((p) => p.id === id);
   const { progress, setMastery } = useProgress();
   const { feedback, setFeedback } = useFeedback();
+  const { overrides, setOverride } = useExplanationOverrides();
   const { memos, setMemo } = usePersonalMemo();
   const { markSolved } = useSolvedAt();
 
@@ -48,6 +50,7 @@ export function ProblemDetail() {
   const mastery = progress[problem.id];
   const savedFeedback = feedback[problem.id];
   const personalMemo = memos[problem.id] ?? "";
+  const effectiveExplanation = overrides[problem.id] ?? problem.explanation;
   const problemNumber = getProblemNumber(allProblems, problem);
   const categoryLabel =
     problem.category.kind === "level"
@@ -99,11 +102,14 @@ export function ProblemDetail() {
           <AiCopyPastePanel
             toggleLabel="AIに添削してもらう"
             successMessage="フィードバックを反映しました"
-            prompt={buildGradeNotePrompt(problem.code, problem.explanation, note)}
+            prompt={buildGradeNotePrompt(problem.code, effectiveExplanation, note)}
             onSubmit={(text) => {
               const result = parseGradeResult(text);
               if (!result.ok) return { ok: false, error: result.error };
-              setFeedback(problem.id, result.value);
+              setFeedback(problem.id, { verdict: result.value.verdict, feedback: result.value.feedback });
+              if (result.value.explanation) {
+                setOverride(problem.id, result.value.explanation);
+              }
               setShowFeedback(true);
               markSolved(problem.id);
               return { ok: true };
@@ -112,7 +118,7 @@ export function ProblemDetail() {
         </div>
       </div>
 
-      {problem.explanation.trim().length > 0 ? (
+      {effectiveExplanation.trim().length > 0 ? (
         <div className="mt-4">
           <button
             onClick={() => setShowAnswer((v) => !v)}
@@ -123,7 +129,7 @@ export function ProblemDetail() {
 
           {showAnswer && (
             <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-              {problem.explanation}
+              {effectiveExplanation}
             </div>
           )}
         </div>
