@@ -24,7 +24,6 @@ export function ProblemDetail() {
   const { markSolved } = useSolvedAt();
 
   const [showAnswer, setShowAnswer] = useState(false);
-  const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showMemo, setShowMemo] = useState(true);
   const [note, setNote] = useState("");
@@ -143,43 +142,6 @@ export function ProblemDetail() {
             />
           </div>
         )
-      )}
-
-      {problem.quiz && (
-        <div className="mt-8">
-          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            クイズ: {problem.quiz.question}
-          </h2>
-          <div className="mt-2 flex flex-col gap-2">
-            {problem.quiz.choices.map((choice, i) => {
-              const isSelected = selectedChoice === i;
-              const isCorrect = i === problem.quiz!.correctIndex;
-              const showResult = selectedChoice !== null;
-              return (
-                <button
-                  key={i}
-                  onClick={() => setSelectedChoice(i)}
-                  className={`rounded-lg border px-4 py-2 text-left text-sm transition ${
-                    showResult && isCorrect
-                      ? "border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300"
-                      : showResult && isSelected
-                        ? "border-rose-400 bg-rose-50 text-rose-800 dark:border-rose-600 dark:bg-rose-900/30 dark:text-rose-300"
-                        : "border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500"
-                  }`}
-                >
-                  {choice}
-                </button>
-              );
-            })}
-          </div>
-          {selectedChoice !== null && (
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-              {selectedChoice === problem.quiz.correctIndex
-                ? "正解です！"
-                : "不正解です。もう一度コードを読んでみましょう。"}
-            </p>
-          )}
-        </div>
       )}
 
       <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
