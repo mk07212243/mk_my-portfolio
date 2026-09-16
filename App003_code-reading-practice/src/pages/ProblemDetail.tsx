@@ -3,21 +3,20 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
 import { AutoGrowTextarea } from "../components/AutoGrowTextarea";
 import { CodeBlock } from "../components/CodeBlock";
-import { levelInfo, topicLabels } from "../data/problems";
 import { useAllProblems } from "../hooks/useAllProblems";
 import { useExplanationOverrides } from "../hooks/useExplanationOverrides";
 import { useFeedback } from "../hooks/useFeedback";
 import { usePersonalMemo } from "../hooks/usePersonalMemo";
 import { useProgress } from "../hooks/useProgress";
 import { useSolvedAt } from "../hooks/useSolvedAt";
-import { buildExplainProblemPrompt, buildGradeNotePrompt } from "../lib/aiPrompts";
-import { parseExplanationResult, parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
+import { buildGradeNotePrompt } from "../lib/aiPrompts";
+import { parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
 import { getProblemNumber } from "../lib/problemNumbering";
 
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { allProblems, updateGeneratedProblem } = useAllProblems();
+  const { allProblems } = useAllProblems();
   const problem = allProblems.find((p) => p.id === id);
   const { progress, setMastery } = useProgress();
   const { feedback, setFeedback } = useFeedback();
@@ -52,12 +51,6 @@ export function ProblemDetail() {
   const personalMemo = memos[problem.id] ?? "";
   const effectiveExplanation = overrides[problem.id] ?? problem.explanation;
   const problemNumber = getProblemNumber(allProblems, problem);
-  const categoryLabel =
-    problem.category.kind === "level"
-      ? `Lv${problem.category.level} ${levelInfo[problem.category.level]?.label ?? ""}`
-      : problem.category.kind === "topic"
-        ? (topicLabels[problem.category.topicId] ?? problem.category.topicId)
-        : "自分のコード";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -134,21 +127,9 @@ export function ProblemDetail() {
           )}
         </div>
       ) : (
-        problem.isGenerated && (
-          <div className="mt-4">
-            <AiCopyPastePanel
-              toggleLabel="AIに解説を生成してもらう"
-              successMessage="解説を追加しました"
-              prompt={buildExplainProblemPrompt(problem.code, categoryLabel)}
-              onSubmit={(text) => {
-                const result = parseExplanationResult(text);
-                if (!result.ok) return { ok: false, error: result.error };
-                updateGeneratedProblem(problem.id, { explanation: result.value.explanation });
-                return { ok: true };
-              }}
-            />
-          </div>
-        )
+        <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
+          まだ解説がありません。上の「AIに添削してもらう」を使うと、メモの添削と同時に解説も生成されます。
+        </p>
       )}
 
       <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
