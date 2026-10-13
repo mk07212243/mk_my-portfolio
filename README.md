@@ -6,7 +6,7 @@
 
 | プロジェクト名 | 概要 | 参考にしたもの |
 | --- | --- | --- |
-| [App003_code-reading-practice](App003_code-reading-practice) | ソースコードを読んで説明する力を鍛える学習用Webアプリ | 特になし |
+| [App003_code-reading-practice](App003_code-reading-practice) | ソースコードを読んで説明する力を鍛える学習用Webアプリ | 特になし（Claude Code使用） |
 
 ## 各プロジェクトの説明について
 
