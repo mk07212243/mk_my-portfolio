@@ -1,0 +1,81 @@
+# main に push されるたびに、各アプリを GitHub Pages に公開する。
+#   App002 → https://mk07212243.github.io/mk_my-portfolio/App002_time-bomb/
+#   App003 → https://mk07212243.github.io/mk_my-portfolio/App003_code-reading-practice/
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: App003_code-reading-practice/package-lock.json
+
+      - name: Build App003
+        working-directory: App003_code-reading-practice
+        run: |
+          npm ci
+          npm run build
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/App002_time-bomb _site/App003_code-reading-practice
+          cp App002_time-bomb/countdown-timer.html _site/App002_time-bomb/index.html
+          cp App002_time-bomb/countdown-timer.html _site/App002_time-bomb/countdown-timer.html
+          cp -R App003_code-reading-practice/dist/. _site/App003_code-reading-practice/
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="ja">
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>mk_my-portfolio</title>
+          <style>
+            body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; line-height: 1.7; }
+            a { color: #2563eb; }
+          </style>
+          </head>
+          <body>
+          <h1>mk_my-portfolio</h1>
+          <ul>
+            <li><a href="App002_time-bomb/">App002_time-bomb</a>：時限爆弾風のカウントダウンタイマー</li>
+            <li><a href="App003_code-reading-practice/">App003_code-reading-practice</a>：ソースコードを読んで説明する力を鍛える学習用Webアプリ</li>
+          </ul>
+          <p><a href="https://github.com/mk07212243/mk_my-portfolio">ソースコード（GitHub）</a></p>
+          </body>
+          </html>
+          EOF
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -4,16 +4,19 @@
 
 ## プロジェクト一覧
 
-| プロジェクト名 | 概要 | 参考にしたもの |
-| --- | --- | --- |
-| [App002_time-bomb](App002_time-bomb) | 時限爆弾風のカウントダウンタイマー | タイマー、時限爆弾のイメージ |
-| [App003_code-reading-practice](App003_code-reading-practice) | ソースコードを読んで説明する力を鍛える学習用Webアプリ | 特になし（Claude Code使用） |
+| プロジェクト名 | 概要 | 参考にしたもの | すぐに使う |
+| --- | --- | --- | --- |
+| [App002_time-bomb](App002_time-bomb) | 時限爆弾風のカウントダウンタイマー | タイマー、時限爆弾のイメージ | [開く](https://mk07212243.github.io/mk_my-portfolio/App002_time-bomb/) |
+| [App003_code-reading-practice](App003_code-reading-practice) | ソースコードを読んで説明する力を鍛える学習用Webアプリ | 特になし（Claude Code使用） | [開く](https://mk07212243.github.io/mk_my-portfolio/App003_code-reading-practice/) |
+
+「開く」のリンクから、インストール不要でそのままブラウザで使えます．詳しい使い方は各プロジェクトの README を見てください．
 
 ## 各プロジェクトの説明について
 
 各プロジェクトフォルダには，以下の項目を含む説明（README）を記載します．
 
 - **概要**：何を作ったアプリか
+- **使い方**：開き方と操作手順
 - **使用技術**：使用した言語・フレームワークなど
 - **参考にしたもの**：参考にしたサイト・書籍・コードがあれば，URLと参考にした範囲
 - **補足**：その他特記事項

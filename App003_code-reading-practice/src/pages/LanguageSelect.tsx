@@ -58,7 +58,7 @@ export function LanguageSelect() {
           AIを使う準備（最初に1回だけ）
         </h2>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          ChatGPT・Gemini・Claudeなどで新しいチャットを開いたら、まず下の文章を貼ってください。各ページの「AIで問題を生成する」「AIに添削してもらう」は、そのチャットの続きに貼っていくとスムーズです。
+          ChatGPT・Gemini・Claudeなどで新しいチャットを開いたら、まず下の文章を貼ってください。各ページの「AIで新しい問題を生成する」「AIに添削してもらう」は、そのチャットの続きに貼っていくとスムーズです。
         </p>
         <div className="mt-2">
           <CopyBox text={setupPrompt} rows={4} />
