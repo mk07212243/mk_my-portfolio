@@ -26,7 +26,7 @@
 HTML / CSS / JavaScript（フレームワーク不使用）
 
 ## 参考にしたもの
-タイマー、時限爆弾のイメージ
+タイマー、時限爆弾のイメージ（Claude Code使用）
 
 ## 補足
 `countdown-timer.html` 1ファイルだけで動作します。

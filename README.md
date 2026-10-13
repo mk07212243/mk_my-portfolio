@@ -6,7 +6,7 @@
 
 | プロジェクト名 | 概要 | 参考にしたもの | すぐに使う |
 | --- | --- | --- | --- |
-| [App002_time-bomb](App002_time-bomb) | 時限爆弾風のカウントダウンタイマー | タイマー、時限爆弾のイメージ | [開く](https://mk07212243.github.io/mk_my-portfolio/App002_time-bomb/) |
+| [App002_time-bomb](App002_time-bomb) | 時限爆弾風のカウントダウンタイマー | タイマー、時限爆弾のイメージ（Claude Code使用） | [開く](https://mk07212243.github.io/mk_my-portfolio/App002_time-bomb/) |
 | [App003_code-reading-practice](App003_code-reading-practice) | ソースコードを読んで説明する力を鍛える学習用Webアプリ | 特になし（Claude Code使用） | [開く](https://mk07212243.github.io/mk_my-portfolio/App003_code-reading-practice/) |
 
 「開く」のリンクから、インストール不要でそのままブラウザで使えます．詳しい使い方は各プロジェクトの README を見てください．
