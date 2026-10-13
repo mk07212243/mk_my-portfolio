@@ -1,32 +1,73 @@
-# React + TypeScript + Vite
+# コードリーディング練習 (code-reading-practice)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+ソースコードを読んで「何をしているか」を自分の言葉で説明する練習をするための Web アプリです。
+書く練習に比べて機会が少ない「読む力」を、短いコードの反復で鍛えることを目的に、自分の学習用として開発しました。
 
-Currently, two official plugins are available:
+## 主な機能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **言語・レベル・文法トピック別の問題**
+  Python / C / JavaScript の3言語。Lv1（変数・出力）〜 Lv5（応用）のレベル別と、「if文」などの文法トピック別に問題を選べます。
+- **説明 → 答え合わせ → 自己評価の学習サイクル**
+  コードを読んで説明を書き、模範解説（具体的な出力結果まで明記）で答え合わせし、「理解できた / まだ不安」で自己評価します。
+- **自分の AI と連携した添削・問題生成（API キー不要）**
+  アプリがプロンプトを組み立ててワンクリックでコピー → ChatGPT / Gemini / Claude など普段使っている AI に貼り付け → 返ってきた JSON をアプリに貼り戻す、というコピペ連携方式です。
+  - 自分の説明の添削（判定 + フィードバック）と、模範解説の強化・生成を1回のやり取りで実行
+  - 指定したレベル・トピックに合わせた新しい問題の生成
+- **自分のコードのストック**
+  手元のコードを貼り付けると言語を自動判定し、練習問題として保存できます。
+- **復習しやすい一覧表示**
+  未挑戦 → 要復習 → 理解済み の順に並び、前回の AI 判定バッジや解答日時を一覧で確認できます。
+- **データのバックアップ・引き継ぎ**
+  学習データを JSON でエクスポート / インポートでき、別の URL や端末へ移行できます。
 
-## React Compiler
+## 設計上の工夫
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **有料 API を使わない AI 連携**
+  サーバーや API キーを持たずに AI の恩恵を受けられるよう、コピペ連携にしました。AI の出力は JSON 形式を指示したうえで、コードフェンスの除去や文字列内の生の改行のエスケープなど、崩れた JSON にも耐えるパース処理を入れています。
+- **カンニングにならない UI**
+  模範解説・保存した AI フィードバック・自分用メモはどれも初期状態で非表示にし、クリックで開く形にしています。また「自分の言葉で説明」欄は、毎回白紙から説明する練習になるよう意図的に保存しません。
+- **サーバー不要・静的ホスティング対応**
+  データはすべてブラウザの localStorage に保存し、HashRouter と相対パスのビルド設定により、静的ファイルを置くだけで動作します。
 
-## Expanding the Oxlint configuration
+## 技術スタック
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- React 19 / TypeScript
+- Vite 7
+- Tailwind CSS v4
+- React Router 7（HashRouter）
+- prism-react-renderer（シンタックスハイライト）
+- oxlint
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## ローカルでの起動
+
+Node.js 20 以降が必要です。
+
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+ブラウザで http://localhost:5173 を開きます。
+
+その他のコマンド:
+
+```bash
+npm run build    # 本番ビルド（dist/ に出力）
+npm run preview  # ビルド結果の確認
+npm run lint     # oxlint による静的解析
+```
+
+## ディレクトリ構成
+
+```
+src/
+├── components/  # コードブロック表示、AI コピペ連携パネルなどの共通部品
+├── data/        # 組み込みの問題データ
+├── hooks/       # 進捗・フィードバック・メモなどの localStorage 永続化
+├── lib/         # AI 用プロンプト生成、AI 応答のパース、言語自動判定
+└── pages/       # 各画面
+```
+
+## ライセンス
+
+[MIT](LICENSE)

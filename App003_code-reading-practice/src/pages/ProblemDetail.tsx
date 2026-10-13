@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AiCopyPastePanel } from "../components/AiCopyPastePanel";
 import { AutoGrowTextarea } from "../components/AutoGrowTextarea";
@@ -13,8 +13,13 @@ import { buildGradeNotePrompt } from "../lib/aiPrompts";
 import { parseGradeResult, verdictLabel, verdictStyle } from "../lib/aiResponse";
 import { getProblemNumber } from "../lib/problemNumbering";
 
+// メモや開閉状態は問題ごとに白紙から始めたいので、IDをkeyにして作り直す。
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
+  return <ProblemDetailContent key={id} id={id} />;
+}
+
+function ProblemDetailContent({ id }: { id: string | undefined }) {
   const navigate = useNavigate();
   const { allProblems } = useAllProblems();
   const problem = allProblems.find((p) => p.id === id);
@@ -28,12 +33,6 @@ export function ProblemDetail() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showMemo, setShowMemo] = useState(false);
   const [note, setNote] = useState("");
-
-  useEffect(() => {
-    setNote("");
-    setShowFeedback(false);
-    setShowMemo(false);
-  }, [id]);
 
   if (!problem) {
     return (

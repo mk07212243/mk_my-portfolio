@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { Language } from "../data/problems";
 import { useStockedProblems } from "../hooks/useStockedProblems";
@@ -17,14 +17,8 @@ export function ImportCode() {
   const [title, setTitle] = useState("");
   const [code, setCode] = useState("");
   const [explanation, setExplanation] = useState("");
-  const [language, setLanguage] = useState<Language>("python");
-  const [manualLanguage, setManualLanguage] = useState(false);
-
-  useEffect(() => {
-    if (!manualLanguage) {
-      setLanguage(detectLanguage(code));
-    }
-  }, [code, manualLanguage]);
+  const [manualLanguage, setManualLanguage] = useState<Language | null>(null);
+  const language = manualLanguage ?? detectLanguage(code);
 
   const handleSubmit = () => {
     if (code.trim().length === 0) return;
@@ -88,10 +82,7 @@ export function ImportCode() {
         </span>
         <select
           value={language}
-          onChange={(e) => {
-            setLanguage(e.target.value as Language);
-            setManualLanguage(true);
-          }}
+          onChange={(e) => setManualLanguage(e.target.value as Language)}
           className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
         >
           {(Object.keys(languageLabel) as Language[]).map((lang) => (
@@ -102,7 +93,7 @@ export function ImportCode() {
         </select>
         {manualLanguage && (
           <button
-            onClick={() => setManualLanguage(false)}
+            onClick={() => setManualLanguage(null)}
             className="text-xs text-blue-600 hover:underline"
           >
             自動判定に戻す
