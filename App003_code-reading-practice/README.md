@@ -41,6 +41,8 @@
 - React Router 7（HashRouter）
 - prism-react-renderer（シンタックスハイライト）
 - oxlint
+- 開発支援：Claude Code（AI コーディングアシスタント）
+  要件・仕様は自分で決め、実装は Claude Code と対話しながら進めました。
 
 ## 参考にしたもの
 
